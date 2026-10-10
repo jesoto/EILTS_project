@@ -21,6 +21,12 @@ def get_conn():
     return db.connect()
 
 
+@st.cache_resource
+def get_provider():
+    from .llm.client import get_provider as _get
+    return _get()
+
+
 def plan_for(weekday: str, phase: int, diagnostic: bool = False) -> list[Block]:
     cur = load_curriculum()
     return cur.diagnostic_blocks() if diagnostic else cur.blocks_for(weekday, phase)

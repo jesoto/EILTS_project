@@ -5,6 +5,7 @@ import streamlit as st
 
 from ielts import db
 from ielts.curriculum import load_curriculum
+from ielts.modules.registry import render_block
 from ielts.ui import fmt_mmss, get_conn, plan_for
 
 st.set_page_config(page_title="Sesión · IELTS Trainer", page_icon="⏱️", layout="wide")
@@ -56,9 +57,12 @@ def timer():
 
 
 timer()
-st.caption(f"Módulo: `{block.module}` — el contenido interactivo llega en hitos posteriores.")
+ctx = {"week": sel["week"], "weekday": sel["weekday"], "phase": sel["phase"], "diagnostic": sel["diagnostic"]}
+can_advance = render_block(block, ctx)
+st.divider()
 
-if st.button("Siguiente bloque ▶" if flow["idx"] < len(blocks) - 1 else "Terminar sesión ✔", type="primary"):
+if st.button("Siguiente bloque ▶" if flow["idx"] < len(blocks) - 1 else "Terminar sesión ✔", type="primary",
+             disabled=not can_advance, help=None if can_advance else "Completa este paso para continuar."):
     secs = int(time.time() - flow["start"])
     flow["secs"][block.id] = secs
     if not sel["diagnostic"]:

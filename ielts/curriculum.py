@@ -42,6 +42,12 @@ class Week(BaseModel):
     light: bool = False
 
 
+class WeekFocus(BaseModel):
+    grammar_topics: list[str]
+    t1: list[str]
+    t2: list[str]
+
+
 class Day(BaseModel):
     label: str
     where: str
@@ -56,6 +62,7 @@ class Curriculum(BaseModel):
     rest_day: date
     phases: list[Phase]
     weeks: list[Week]
+    week_focus: dict[int, WeekFocus]
     srs_block: Block
     days: dict[str, Day]
     phase_overrides: dict[int, dict[str, list[Block]]] = {}
@@ -64,6 +71,9 @@ class Curriculum(BaseModel):
 
     def week(self, n: int) -> Week:
         return self.weeks[min(max(n, 1), len(self.weeks)) - 1]
+
+    def focus(self, n: int) -> WeekFocus:
+        return self.week_focus[min(max(n, 1), len(self.weeks))]
 
     def phase_of_week(self, n: int) -> Phase:
         for p in self.phases:

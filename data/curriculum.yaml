@@ -23,6 +23,21 @@ weeks:
   - {n: 10, grammar: "Error log",                                writing: "2 T1 + 2 T2 cronometrados",                           receptive: "2 simulacros completos",                    vocab: "Repaso global"}
   - {n: 11, grammar: "Checklist",                                writing: "1 simulacro Writing (lun 21)",                        receptive: "1 simulacro completo (mar 22)",             vocab: "Repaso ligero", light: true}
 
+# Enfoque estructurado por semana: temas de gramática (ids de data/grammar_topics.yaml;
+# "error_log" = los 3 temas con más errores recientes) y tipos de Writing.
+week_focus:
+  1:  {grammar_topics: [subject_agreement], t1: [line], t2: [opinion]}
+  2:  {grammar_topics: [articles],          t1: [line, bar], t2: [opinion]}
+  3:  {grammar_topics: [t1_tenses_prepositions], t1: [bar, table], t2: [opinion]}
+  4:  {grammar_topics: [relatives_concessives], t1: [line, bar, table], t2: [discussion]}
+  5:  {grammar_topics: [conditionals],      t1: [pie, mixed], t2: [discussion, opinion]}
+  6:  {grammar_topics: [passive],           t1: [line, bar, pie, table], t2: [problem_solution]}
+  7:  {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [advantages_disadvantages]}
+  8:  {grammar_topics: [inversion_nominalization], t1: [line, bar, pie, table, mixed], t2: [double_question]}
+  9:  {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
+  10: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
+  11: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
+
 # Bloques (minutos). `module` enlaza con el módulo que lo renderiza (hitos posteriores).
 # `timed_from_phase`: el cronómetro es obligatorio solo desde esa fase (antes es libre).
 srs_block: {id: srs, title: "Anki / SRS", minutes: 15, module: vocab, strategy: "Repasa vocabulario y chunks. Tarjeta = palabra + familia + 2 colocaciones + tu oración."}

@@ -1,0 +1,90 @@
+# Temas de gramática: micro-teoría (≤10 min) en español + notas de interferencia para el generador.
+# `category_topics` mapea categorías del error log al tema que las refuerza.
+category_topics:
+  subject_omission: subject_agreement
+  sv_agreement: subject_agreement
+  articles: articles
+  verb_tense: t1_tenses_prepositions
+  prepositions: t1_tenses_prepositions
+
+topics:
+  subject_agreement:
+    name: "Sujeto obligatorio + concordancia sujeto-verbo"
+    interference: "Spanish is pro-drop: learners omit the subject (Is important that…, Exist many…, Have a problem). Also: people is, the data show/shows, everyone are, he don't, 'there is' with plural nouns."
+    theory_es: |
+      **1. En inglés el sujeto es obligatorio.** En español decimos *"Es importante que…"* o *"Existen muchos problemas"*; en inglés hace falta un sujeto, aunque sea vacío:
+      - ❌ *Is clear that technology helps.* → ✅ **It** *is clear that technology helps.*
+      - ❌ *Exist many reasons.* → ✅ **There are** *many reasons.*
+      - ❌ *Have a big impact.* → ✅ **It has** *a big impact* / **This has** *a big impact.*
+
+      **2. Concordancia.** El verbo concuerda con el núcleo del sujeto, no con el sustantivo más cercano:
+      - *The number of **students** is rising.* (the number → is) · *A number of students **are** rising/…* (a number of = muchos)
+      - **People, police, staff (grupo), the poor** → plural: *People **are**…*
+      - **Information, advice, research, equipment** → incontables: *The information **is**…*
+      - 3.ª persona singular: *he/she/it **works**, doesn't, has, is*.
+      - Cuidado con *there is/are*: concuerda con lo que viene después (*There **are** two reasons*).
+
+      **Truco de revisión:** en cada cláusula, subraya el sujeto y comprueba que existe y que concuerda.
+  articles:
+    name: "Artículos (a / an / the / ∅)"
+    interference: "Spanish uses the definite article with generalizations (the education is important, the people think) and omits 'a' before professions/predicates. Learners also drop articles before singular countable nouns."
+    theory_es: |
+      - **Generalizaciones: sin artículo.** ❌ *The education is important* → ✅ *Education is important.* ❌ *The people want…* → ✅ *People want…*
+      - **Singular contable: siempre necesita determinante.** ❌ *Government should act* → ✅ *The government should act* / *Governments should act.*
+      - **a/an** = una cosa cualquiera, primera mención: *a study*, *an increase*. **the** = ya conocida o única: *The study showed… the government, the environment.*
+      - **Profesiones/roles:** *She is **a** teacher.* (en español no hay artículo).
+      - **Cantidad/datos:** *a rise of 5%*, *a significant increase*, *the highest figure*, *the majority of*, *a number of*.
+      - **Sin artículo:** mayoría de países, idiomas, *in society, at university, by car*.
+  t1_tenses_prepositions:
+    name: "Tiempos en Task 1 + preposiciones con datos"
+    interference: "Learners mix present and past for past data, and calque Spanish prepositions: increase of/in, rise in/to, 'in the 2010', 'from 20 until 30'. Correct: increased by 10%, rose to 30%, peaked at, fell from X to Y, in 2010, between 2000 and 2010."
+    theory_es: |
+      **Tiempos:** datos pasados (gráficos con años pasados) → **pasado simple** (*rose, fell*); un proceso → **presente simple** y a menudo **pasiva**; proyecciones → **will / is expected to / is projected to**. Usa **present perfect** solo con "since / over the last decade" hasta hoy.
+
+      **Preposiciones con datos:**
+      - *increase **by** 10%* (diferencia) · *increase **to** 30%* (valor final) · *increase **from** 20% **to** 30%*
+      - *a rise **of** 10%* · *a rise **in** sales* · *peak **at** 40%* · *stand **at** 25%*
+      - *in 2010* · *in March* · *between 2000 and 2010* · *over the period* · *by 2030* · *from 2000 to 2010*
+      - ❌ *in the 2010*, ❌ *until 2010 since 2000* → ✅ *in 2010*, *from 2000 to 2010*
+  relatives_concessives:
+    name: "Oraciones relativas y concesivas"
+    interference: "Learners use 'that' after a comma, repeat the pronoun ('the man who he…'), confuse although/despite/in spite of grammar, and write 'Although …, but …'."
+    theory_es: |
+      **Relativas:** *who* (personas), *which* (cosas), *that* (sin coma), *whose* (posesión), *where*.
+      - Sin pronombre repetido: ❌ *the policy which it was introduced* → ✅ *the policy which was introduced.*
+      - Con coma (información extra) → **which**, nunca *that*: *Tourism, **which** creates jobs, can harm…*
+
+      **Concesivas:**
+      - ***Although / Even though / While / Whereas*** + cláusula: *Although costs rise, …* (❌ *Although… but…*)
+      - ***Despite / In spite of*** + sustantivo o -ing: *Despite the cost, …* / *Despite **being** expensive, …*
+      - *However,* / *Nevertheless,* abren oración nueva (con punto o punto y coma antes).
+  conditionals:
+    name: "Condicionales"
+    interference: "Learners put 'will' after 'if' (If it will rain), mix second and third conditional, and use 'if' + 'would'."
+    theory_es: |
+      - **Zero:** *If water is heated, it boils.* (hechos)
+      - **1.º:** *If governments **invest** in transport, congestion **will** fall.* (❌ *if governments will invest*)
+      - **2.º:** *If more people **cycled**, pollution **would** decrease.* (irreal/hipotético en el presente)
+      - **3.º:** *If the law **had been** stricter, crime **would have** fallen.* (pasado irreal)
+      - **Mixto/formal:** *Unless* = if not · *Provided that* · *Were governments to act, …* (inversión)
+      - En Task 2 usa 1.º y 2.º para soluciones y consecuencias; evita *"if"* repetido.
+  passive:
+    name: "Voz pasiva"
+    interference: "Learners omit 'be' (is used → 'used'), overuse active 'people', mistake the past participle (is **spend**), and place by-agent unnecessarily."
+    theory_es: |
+      **Forma:** *be* (en el tiempo adecuado) + **participio pasado**. ❌ *Plastic is use* → ✅ *Plastic **is used**.*
+      - Presente: *is/are made* · Pasado: *was/were built* · Perfecto: *has been introduced* · Modal: *should be banned* · Futuro: *will be reduced*
+      - Úsala cuando importa la acción, no el agente (procesos de Task 1: *The water **is heated** and then **filtered**.*).
+      - Omite *by…* si el agente es obvio o general.
+  inversion_nominalization:
+    name: "Inversión y nominalización"
+    interference: "Learners avoid inversion or keep normal order after negative adverbials; they use verbs where C1 style prefers noun phrases."
+    theory_es: |
+      **Inversión (formal, uso puntual):**
+      - *Not only **do** governments need to act, but individuals must also change.*
+      - *Rarely **has** technology had such an impact.* · *Only by investing in schools **can** we…*
+      - *Hardly **had** … when …*
+
+      **Nominalización:** convierte un verbo/adjetivo en sustantivo para ganar densidad:
+      - *People **are unemployed**, which harms the economy.* → *High **unemployment** harms the economy.*
+      - *Governments **decide** quickly.* → *Rapid **decision-making** by governments…*

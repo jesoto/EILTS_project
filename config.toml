@@ -1,0 +1,11 @@
+# Configuración del LLM. El modelo NUNCA va hardcodeado en el código.
+# Se puede sobrescribir con variables de entorno: IELTS_LLM_PROVIDER, IELTS_LLM_MODEL, IELTS_OLLAMA_HOST.
+[llm]
+provider = "ollama"
+model = "gemma3:12b"
+host = "http://localhost:11434"
+num_ctx = 8192
+timeout_s = 300
+max_retries = 2          # reintentos si el JSON no valida
+temperature_eval = 0.2   # evaluación (<= 0.3)
+temperature_gen = 0.8    # generación de ejercicios
