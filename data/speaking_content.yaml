@@ -1,0 +1,45 @@
+# Contenido original de Speaking, por tema semanal (claves = `vocab` de curriculum.yaml).
+# Estructura de cada respuesta: respuesta → razón → ejemplo.
+themes:
+  Educación:
+    cards:
+      - {topic: "Describe a teacher who has influenced you.", points: ["who the teacher was", "what they taught you", "how they taught", "and explain why they influenced you"]}
+      - {topic: "Describe a subject you enjoyed studying at school.", points: ["what the subject was", "who taught it", "what you did in class", "and explain why you enjoyed it"]}
+    part1: ["Do you work or are you a student?", "What do you like most about your studies or job?", "Did you enjoy school when you were a child?", "Would you like to study abroad?"]
+    part3: ["Why do some people prefer to learn online rather than in a classroom?", "Should university education be free? Why or why not?", "How has the role of teachers changed in recent years?"]
+  Tecnología:
+    cards:
+      - {topic: "Describe a piece of technology you use every day.", points: ["what it is", "how often you use it", "what you use it for", "and explain why it is important to you"]}
+      - {topic: "Describe a time when technology did not work as expected.", points: ["what the technology was", "what went wrong", "how you solved it", "and explain how you felt"]}
+    part1: ["How often do you use your phone?", "What websites or apps do you use most?", "Do you prefer to send messages or make phone calls?", "Is it easy for you to learn new technology?"]
+    part3: ["Do you think people depend too much on technology?", "How might technology change the way we work in the future?", "Is it a good idea for children to have their own smartphones?"]
+  Medio ambiente:
+    cards:
+      - {topic: "Describe a place in nature that you like to visit.", points: ["where it is", "how you get there", "what you can do there", "and explain why you like it"]}
+      - {topic: "Describe something you do to help the environment.", points: ["what you do", "when you started doing it", "how difficult it is", "and explain why you think it matters"]}
+    part1: ["Do you like spending time outdoors?", "Is there a lot of green space where you live?", "Do you recycle at home?", "What is the weather usually like in your city?"]
+    part3: ["Who should be responsible for protecting the environment, governments or individuals?", "Why do some people ignore environmental problems?", "What can cities do to reduce pollution?"]
+  Salud:
+    cards:
+      - {topic: "Describe something you do to stay healthy.", points: ["what you do", "how often you do it", "who you do it with", "and explain how it helps your health"]}
+      - {topic: "Describe a time when you felt very tired.", points: ["when it was", "why you were tired", "what you did about it", "and explain how you recovered"]}
+    part1: ["Do you think you have a healthy lifestyle?", "What do you usually eat for breakfast?", "Do you play any sports?", "How do you relax after a busy day?"]
+    part3: ["Why do many people find it hard to eat healthily?", "Should governments tax unhealthy food?", "How can employers improve the health of their workers?"]
+  Sociedad y ciudades:
+    cards:
+      - {topic: "Describe a busy place you have visited in a city.", points: ["where it was", "when you went there", "what you saw and did", "and explain how you felt about the place"]}
+      - {topic: "Describe a neighbour or a person in your community.", points: ["who the person is", "how you know them", "what they are like", "and explain why they are important to your community"]}
+    part1: ["Do you live in a house or an apartment?", "What do you like about your neighbourhood?", "How do you usually get around the city?", "Would you prefer to live in the city or the countryside?"]
+    part3: ["What problems do big cities face today?", "Why are so many young people moving to cities?", "How can cities become better places to live?"]
+  Trabajo y economía:
+    cards:
+      - {topic: "Describe a job you would like to have in the future.", points: ["what the job is", "what skills you need", "what you would do every day", "and explain why you would like it"]}
+      - {topic: "Describe a time when you managed your money well.", points: ["when it was", "what you bought or saved for", "how you planned it", "and explain why it was a good decision"]}
+    part1: ["What do you do for a living?", "What do you like or dislike about your job?", "Do you prefer working alone or in a team?", "How do you usually spend your salary?"]
+    part3: ["Why do some people prefer to work from home?", "How can governments reduce the gap between rich and poor?", "Is job security more important than a high salary?"]
+  Gobierno y crimen:
+    cards:
+      - {topic: "Describe a law that you think is important.", points: ["what the law is", "who it affects", "how it is enforced", "and explain why you think it is important"]}
+      - {topic: "Describe a time when you followed a rule you disagreed with.", points: ["what the rule was", "why you disagreed", "what you did", "and explain how you felt about it"]}
+    part1: ["Do you follow the news?", "Are you interested in politics?", "Do you feel safe in your city?", "What do you think of the rules at your workplace or school?"]
+    part3: ["What is the best way to reduce crime?", "Should the government control what people post online?", "Why do some people not trust politicians?"]

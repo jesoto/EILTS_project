@@ -9,3 +9,12 @@ timeout_s = 300
 max_retries = 2          # reintentos si el JSON no valida
 temperature_eval = 0.2   # evaluación (<= 0.3)
 temperature_gen = 0.8    # generación de ejercicios
+
+# Speech-to-text local (faster-whisper). Con device = "cpu" no hace falta instalar cuDNN/cuBLAS.
+[stt]
+model = "small"
+device = "cpu"
+compute_type = "int8"
+language = "en"
+# Prompt que anima a Whisper a transcribir muletillas (um, uh, like) en vez de omitirlas.
+initial_prompt = "Umm, let me think, like, hmm... Okay, so, uh, I think, you know, it's a good question."

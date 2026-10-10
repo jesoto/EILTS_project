@@ -33,3 +33,24 @@ def load_llm_config(path: Path | None = None) -> LLMConfig:
     if overrides:
         cfg = LLMConfig(**{**cfg.__dict__, **overrides})
     return cfg
+
+
+@dataclass(frozen=True)
+class STTConfig:
+    model: str = "small"
+    device: str = "cpu"
+    compute_type: str = "int8"
+    language: str = "en"
+    initial_prompt: str = ""
+
+
+def load_stt_config(path: Path | None = None) -> STTConfig:
+    data: dict = {}
+    p = path or CONFIG_PATH
+    if p.exists():
+        with open(p, "rb") as f:
+            data = tomllib.load(f).get("stt", {})
+    cfg = STTConfig(**{k: v for k, v in data.items() if k in STTConfig.__dataclass_fields__})
+    if os.environ.get("IELTS_STT_MODEL"):
+        cfg = STTConfig(**{**cfg.__dict__, "model": os.environ["IELTS_STT_MODEL"]})
+    return cfg

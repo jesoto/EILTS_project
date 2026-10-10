@@ -71,6 +71,17 @@ CREATE TABLE IF NOT EXISTS review_log (
     date TEXT NOT NULL,
     quality INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS speaking_session (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    week INTEGER NOT NULL,
+    part TEXT NOT NULL,             -- p2 | p13
+    prompt TEXT NOT NULL,
+    transcript TEXT NOT NULL,
+    metrics TEXT NOT NULL,
+    evaluation TEXT,
+    audio_path TEXT
+);
 CREATE TABLE IF NOT EXISTS writing_submission (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT NOT NULL,

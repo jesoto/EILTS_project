@@ -27,6 +27,12 @@ def get_provider():
     return _get()
 
 
+@st.cache_resource
+def get_transcriber():
+    from .stt import FasterWhisperTranscriber
+    return FasterWhisperTranscriber()
+
+
 def plan_for(weekday: str, phase: int, diagnostic: bool = False) -> list[Block]:
     cur = load_curriculum()
     return cur.diagnostic_blocks() if diagnostic else cur.blocks_for(weekday, phase)

@@ -128,3 +128,14 @@ class VocabCard(BaseModel):
 
 class VocabCardBatch(BaseModel):
     cards: list[VocabCard]
+
+
+# ---- Speaking ----
+class SpeakingEvaluation(BaseModel):
+    fc: CriterionScore = Field(description="Fluency and Coherence")
+    lr: CriterionScore = Field(description="Lexical Resource")
+    gra: CriterionScore = Field(description="Grammatical Range and Accuracy")
+    errores: list[ErrorItem]
+    pronunciacion_es: str = Field(description="Approximate observation only; NO band")
+    consejos_es: list[str] = Field(max_length=3)
+    respuesta_mejorada_en: str = Field(description="A stronger version of the learner's answer, realistic for B2+")
