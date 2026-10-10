@@ -1,0 +1,21 @@
+# Semillas de vocabulario. Las tarjetas completas (familia, colocaciones, ejemplo) las genera el LLM.
+# Las claves de `themes` coinciden con `vocab` de data/curriculum.yaml.
+themes:
+  Educación: [curriculum, tuition fees, compulsory education, literacy, academic attainment, vocational training, peer pressure, distance learning, drop out, student-centred]
+  Tecnología: [artificial intelligence, digital divide, cutting-edge, automation, cyber security, breakthrough, obsolete, widespread adoption, rely on, screen time]
+  Medio ambiente: [greenhouse gas emissions, renewable energy, deforestation, biodiversity, carbon footprint, sustainable development, fossil fuels, endangered species, raise awareness, global warming]
+  Salud: [sedentary lifestyle, obesity, life expectancy, preventive care, balanced diet, mental health, healthcare system, chronic disease, public health, take a toll on]
+  Sociedad y ciudades: [urbanisation, overcrowding, public transport, affordable housing, infrastructure, rural-urban migration, quality of life, urban sprawl, congestion, social cohesion]
+  Trabajo y economía: [unemployment, workforce, work-life balance, income gap, remote working, job security, economic growth, labour market, cost of living, entrepreneur]
+  Gobierno y crimen: [legislation, enforce, deter, rehabilitation, custodial sentence, law-abiding, tackle crime, public spending, impose a ban, crime rate]
+
+# "Repaso colocaciones" (semana 8)
+c1_collocations: [conduct research, draw a conclusion, pose a threat, mitigate the effects, widen the income gap, place strain on, play a crucial role, bring about change, reach a consensus, strike a balance]
+
+# Falsos amigos español→inglés (siempre disponibles)
+false_friends: [actually, realize, eventually, sensible, assist, sympathetic, pretend, attend, embarrassed, argument, lecture, introduce, career, support, resume]
+
+# AWL (Academic Word List). Sublista 1 incluida; las sublistas 2-10 se pueden añadir aquí
+# (fase 1 usa 1-5, fase 2 usa 6-10).
+awl:
+  1: [analyse, approach, area, assess, assume, authority, available, benefit, concept, consistent, constitute, context, contract, create, data, definition, derive, distribute, economy, environment, establish, estimate, evident, export, factor, finance, formula, function, identify, income, indicate, individual, interpret, involve, issue, labour, legal, legislate, major, method, occur, percent, period, policy, principle, proceed, process, require, research, respond, role, section, sector, significant, similar, source, specific, structure, theory, variable]

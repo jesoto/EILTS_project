@@ -11,5 +11,8 @@ def render_block(block, ctx) -> bool:
     if block.module == "writing":
         from . import ui_writing
         return ui_writing.render(block, ctx)
+    if block.module == "vocab":
+        from . import ui_vocab
+        return ui_vocab.render(block, ctx)
     st.caption(f"Módulo `{block.module}` — el contenido interactivo llega en hitos posteriores.")
     return True

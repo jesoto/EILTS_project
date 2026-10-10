@@ -107,3 +107,24 @@ class ProductionFeedback(BaseModel):
     comentario_es: str
     version_corregida: str
     topic_used_correctly: bool
+
+
+# ---- Vocabulario ----
+class WordFamily(BaseModel):
+    noun: str = ""
+    verb: str = ""
+    adjective: str = ""
+    adverb: str = ""
+
+
+class VocabCard(BaseModel):
+    word: str = Field(description="The headword or chunk, exactly as requested")
+    family: WordFamily
+    collocations: list[str] = Field(min_length=2, description="At least 2 natural collocations/chunks in English")
+    definition_es: str = Field(description="Short meaning in Spanish")
+    example_en: str = Field(description="One natural example sentence in English (IELTS context)")
+    false_friend_note_es: str = Field(default="", description="Only if there is a Spanish false friend or common error")
+
+
+class VocabCardBatch(BaseModel):
+    cards: list[VocabCard]

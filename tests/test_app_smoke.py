@@ -39,6 +39,6 @@ def test_session_flow_runs_to_summary(monkeypatch, tmp_path):
     assert not at.exception
     n = 3  # speaking_p2, doubts, srs
     for _ in range(n):
-        at.button[0].click().run()
+        next(b for b in at.button if b.label.startswith(("Siguiente", "Terminar"))).click().run()
         assert not at.exception
     assert any("completada" in s.value for s in at.success)

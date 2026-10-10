@@ -45,6 +45,32 @@ CREATE TABLE IF NOT EXISTS skill_window (skill TEXT PRIMARY KEY, start_id INTEGE
 CREATE TABLE IF NOT EXISTS generated_exercise (
     hash TEXT PRIMARY KEY, kind TEXT NOT NULL, topic TEXT NOT NULL, created TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS card (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    word TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL DEFAULT 'pending',   -- pending (sin detalles) | ready
+    source TEXT NOT NULL DEFAULT 'manual',    -- error_log | weekly | false_friend | awl | collocation | manual
+    theme TEXT NOT NULL DEFAULT '',
+    context TEXT NOT NULL DEFAULT '',
+    family TEXT NOT NULL DEFAULT '{}',
+    collocations TEXT NOT NULL DEFAULT '[]',
+    definition_es TEXT NOT NULL DEFAULT '',
+    example_en TEXT NOT NULL DEFAULT '',
+    note_es TEXT NOT NULL DEFAULT '',
+    user_sentence TEXT NOT NULL DEFAULT '',
+    ease REAL NOT NULL DEFAULT 2.5,
+    interval INTEGER NOT NULL DEFAULT 0,
+    reps INTEGER NOT NULL DEFAULT 0,
+    due TEXT NOT NULL,
+    created TEXT NOT NULL,
+    last_review TEXT
+);
+CREATE TABLE IF NOT EXISTS review_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    card_id INTEGER NOT NULL,
+    date TEXT NOT NULL,
+    quality INTEGER NOT NULL
+);
 CREATE TABLE IF NOT EXISTS writing_submission (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT NOT NULL,
@@ -110,7 +136,25 @@ def log_error(conn: sqlite3.Connection, module: str, fragment: str, correction: 
            DO UPDATE SET count = count + 1, date = excluded.date""",
         (datetime.now().date().isoformat(), module, fragment.strip(), correction.strip(), category, explanation),
     )
+    if category in LEXICAL_CATEGORIES:
+        queue_card_from_error(conn, fragment, correction, category, explanation)
     conn.commit()
+
+
+LEXICAL_CATEGORIES = {"collocation", "false_friend", "word_form", "spelling"}
+
+
+def queue_card_from_error(conn: sqlite3.Connection, fragment: str, correction: str, category: str,
+                          explanation: str = "") -> None:
+    """Los errores léxicos generan una tarjeta pendiente (los detalles los completa el LLM después)."""
+    word = " ".join(correction.lower().split()).strip(" .,;:")
+    if not word or len(word.split()) > 5:   # solo palabras/chunks, no oraciones enteras
+        return
+    today = datetime.now().date().isoformat()
+    conn.execute(
+        """INSERT OR IGNORE INTO card(word, status, source, context, due, created)
+           VALUES (?, 'pending', 'error_log', ?, ?, ?)""",
+        (word, f"{fragment.strip()} → {correction.strip()} ({category}): {explanation}".strip(), today, today))
 
 
 def top_categories(conn: sqlite3.Connection, since: str | None = None, limit: int = 3) -> list[tuple[str, int]]:
