@@ -11,6 +11,9 @@ def render_block(block, ctx) -> bool:
     if block.module == "writing":
         from . import ui_writing
         return ui_writing.render(block, ctx)
+    if block.module in ("reading", "listening", "errorlog", "simulacro"):
+        from . import ui_receptive
+        return ui_receptive.render(block, ctx)
     if block.module == "speaking":
         from . import ui_speaking
         return ui_speaking.render(block, ctx)

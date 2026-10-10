@@ -38,6 +38,13 @@ week_focus:
   10: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
   11: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
 
+# Fase 1: tipo de pregunta de Reading y parte de Listening de cada semana (tipos = Group.type de la ingesta).
+receptive_focus:
+  1: {reading_types: [tfng, ynng],                       listening_part: 1}
+  2: {reading_types: [matching_headings, matching_info], listening_part: 2}
+  3: {reading_types: [completion],                       listening_part: 3}
+  4: {reading_types: [mcq, multi, matching_info],        listening_part: 4}
+
 # Bloques (minutos). `module` enlaza con el módulo que lo renderiza (hitos posteriores).
 # `timed_from_phase`: el cronómetro es obligatorio solo desde esa fase (antes es libre).
 srs_block: {id: srs, title: "Anki / SRS", minutes: 15, module: vocab, strategy: "Repasa vocabulario y chunks. Tarjeta = palabra + familia + 2 colocaciones + tu oración."}

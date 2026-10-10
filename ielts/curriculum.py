@@ -48,6 +48,11 @@ class WeekFocus(BaseModel):
     t2: list[str]
 
 
+class ReceptiveFocus(BaseModel):
+    reading_types: list[str]
+    listening_part: int
+
+
 class Day(BaseModel):
     label: str
     where: str
@@ -63,6 +68,7 @@ class Curriculum(BaseModel):
     phases: list[Phase]
     weeks: list[Week]
     week_focus: dict[int, WeekFocus]
+    receptive_focus: dict[int, ReceptiveFocus] = {}
     srs_block: Block
     days: dict[str, Day]
     phase_overrides: dict[int, dict[str, list[Block]]] = {}
@@ -74,6 +80,9 @@ class Curriculum(BaseModel):
 
     def focus(self, n: int) -> WeekFocus:
         return self.week_focus[min(max(n, 1), len(self.weeks))]
+
+    def receptive(self, n: int) -> ReceptiveFocus | None:
+        return self.receptive_focus.get(n)
 
     def phase_of_week(self, n: int) -> Phase:
         for p in self.phases:

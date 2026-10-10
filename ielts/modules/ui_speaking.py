@@ -9,7 +9,7 @@ from ..curriculum import load_curriculum
 from ..llm.base import LLMError
 from ..llm.schemas import SpeakingEvaluation
 from ..speaking_metrics import SpeakingMetrics
-from ..ui import fmt_mmss, get_conn, get_provider, get_transcriber
+from ..ui import audio_format, fmt_mmss, get_conn, get_provider, get_transcriber
 from . import speaking as sp
 
 PREP_SECONDS = 60
@@ -173,7 +173,7 @@ def _render_shadowing(ctx) -> bool:
     c1, c2 = st.columns(2)
     start = c1.number_input("Inicio (s)", min_value=0, value=0, step=5, key=f"{key}_start")
     length = c2.slider("Duración del fragmento (s)", 10, 40, 20, key=f"{key}_len")
-    st.audio(str(path), start_time=int(start), end_time=int(start + length))
+    st.audio(str(path), format=audio_format(path), start_time=int(start), end_time=int(start + length))
     st.caption("1) Escucha. 2) Pulsa «Preparar referencia». 3) Escucha otra vez repitiendo en voz alta justo después de cada frase "
                "(shadowing). 4) Graba tu versión.")
 

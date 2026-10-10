@@ -42,3 +42,9 @@ def fmt_mmss(seconds: int) -> str:
     sign = "-" if seconds < 0 else ""
     seconds = abs(int(seconds))
     return f"{sign}{seconds // 60:02d}:{seconds % 60:02d}"
+
+
+def audio_format(path) -> str:
+    """Streamlit asume audio/wav por defecto; un MP3 servido así no se decodifica en el navegador."""
+    return {".mp3": "audio/mpeg", ".wav": "audio/wav", ".ogg": "audio/ogg", ".m4a": "audio/mp4"}.get(
+        str(path)[str(path).rfind("."):].lower(), "audio/mpeg")

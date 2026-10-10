@@ -82,6 +82,28 @@ CREATE TABLE IF NOT EXISTS speaking_session (
     evaluation TEXT,
     audio_path TEXT
 );
+CREATE TABLE IF NOT EXISTS receptive_attempt (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    week INTEGER NOT NULL,
+    skill TEXT NOT NULL,            -- reading | listening
+    test_id TEXT NOT NULL,          -- p. ej. c17/test1
+    unit TEXT NOT NULL,             -- p1 | p1,p2,p3 | l1 ... (pasajes/partes)
+    raw INTEGER NOT NULL,
+    total INTEGER NOT NULL,
+    band REAL,                      -- solo si se hizo el test completo (40)
+    qtype TEXT NOT NULL DEFAULT '', -- tipo de pregunta practicado (secciones sueltas)
+    seconds INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS receptive_error (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    attempt_id INTEGER NOT NULL,
+    q INTEGER NOT NULL,
+    qtype TEXT NOT NULL,
+    user_answer TEXT NOT NULL,
+    correct_answer TEXT NOT NULL,
+    cause TEXT NOT NULL DEFAULT ''
+);
 CREATE TABLE IF NOT EXISTS writing_submission (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT NOT NULL,
