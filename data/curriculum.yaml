@@ -1,0 +1,106 @@
+# Fuente única del plan de 11 semanas. Toda la lógica lee de aquí.
+start_date: 2026-10-12      # lunes
+exam_date: 2026-12-29       # martes
+checkpoint_date: 2026-11-22 # domingo (simulacro completo)
+free_days: [2026-12-24, 2026-12-25]
+rest_day: 2026-12-28        # descanso + checklist de logística
+
+phases:
+  - {id: 1, name: Cimientos,    weeks: [1, 4],  start: 2026-10-12, end: 2026-11-08, timed_writing: false, full_tests: false}
+  - {id: 2, name: Construcción, weeks: [5, 8],  start: 2026-11-09, end: 2026-12-06, timed_writing: true,  full_tests: true}
+  - {id: 3, name: Simulacro,    weeks: [9, 11], start: 2026-12-07, end: 2026-12-27, timed_writing: true,  full_tests: true}
+
+weeks:
+  - {n: 1,  grammar: "Sujeto obligatorio + concordancia",        writing: "T1: estructura y overview (line graph)",              receptive: "T/F/Not Given · Listening sec. 1",          vocab: "Educación"}
+  - {n: 2,  grammar: "Artículos",                                writing: "T2: opinión",                                         receptive: "Matching headings · Listening sec. 2",      vocab: "Tecnología"}
+  - {n: 3,  grammar: "Tiempos en T1 + preposiciones con datos",  writing: "T1: bar chart y tabla",                               receptive: "Completion · Listening sec. 3",             vocab: "Medio ambiente"}
+  - {n: 4,  grammar: "Relativas y concesivas",                   writing: "T2: discussion (both views)",                         receptive: "Multiple choice / matching info · Listening sec. 4", vocab: "Salud"}
+  - {n: 5,  grammar: "Condicionales",                            writing: "T1: pie chart y mixtos · inicia cronómetro",          receptive: "Primer Reading y Listening completos",      vocab: "Sociedad y ciudades"}
+  - {n: 6,  grammar: "Voz pasiva",                               writing: "T1: process y map · T2: problema-solución",           receptive: "Simulacro 22 nov (checkpoint)",             vocab: "Trabajo y economía"}
+  - {n: 7,  grammar: "Top 3 errores del error log",              writing: "T2: ventajas-desventajas",                            receptive: "Tests completos, foco en tipo más débil",   vocab: "Gobierno y crimen"}
+  - {n: 8,  grammar: "Inversión, nominalización",                writing: "T2: doble pregunta",                                  receptive: "Tests completos, Listening a 1.25x",        vocab: "Repaso colocaciones", listening_speed: 1.25}
+  - {n: 9,  grammar: "Error log",                                writing: "2 T1 + 2 T2 cronometrados",                           receptive: "2 simulacros completos",                    vocab: "Repaso global"}
+  - {n: 10, grammar: "Error log",                                writing: "2 T1 + 2 T2 cronometrados",                           receptive: "2 simulacros completos",                    vocab: "Repaso global"}
+  - {n: 11, grammar: "Checklist",                                writing: "1 simulacro Writing (lun 21)",                        receptive: "1 simulacro completo (mar 22)",             vocab: "Repaso ligero", light: true}
+
+# Bloques (minutos). `module` enlaza con el módulo que lo renderiza (hitos posteriores).
+# `timed_from_phase`: el cronómetro es obligatorio solo desde esa fase (antes es libre).
+srs_block: {id: srs, title: "Anki / SRS", minutes: 15, module: vocab, strategy: "Repasa vocabulario y chunks. Tarjeta = palabra + familia + 2 colocaciones + tu oración."}
+
+# Orden Lun..Dom = monday..sunday
+days:
+  monday:
+    label: Lunes
+    where: remoto
+    blocks:
+      - {id: writing_t2,   title: "Writing Task 2",                 minutes: 40, module: writing,  timed_from_phase: 2, strategy: "Idea → explicación → ejemplo → vínculo con la pregunta. Posición clara desde la introducción."}
+      - {id: rewrite,      title: "Reescritura con checklist",      minutes: 20, module: writing,  strategy: "Corrige las 3 peores oraciones y vuelve a evaluar."}
+      - {id: grammar,      title: "Gramática del tema semanal",     minutes: 30, module: grammar,  strategy: "Micro-teoría (≤10 min) → ejercicios → párrafo propio."}
+  tuesday:
+    label: Martes
+    where: oficina + clase
+    blocks:
+      - {id: listening,    title: "Listening (audio de práctica)",  minutes: 15, module: listening, strategy: "Predice palabras clave antes de escuchar. La ortografía cuenta."}
+      - {id: teacher_prep, title: "Preparar ensayo para la profesora", minutes: 15, module: export, strategy: "Exporta el ensayo del lunes con errores marcados (PDF/markdown)."}
+  wednesday:
+    label: Miércoles
+    where: oficina
+    blocks:
+      - {id: reading,        title: "Reading: 1 passage",           minutes: 20, module: reading, timed_from_phase: 1, strategy: "Máx. 20 min. Aviso a los 90 s en una misma pregunta."}
+      - {id: error_analysis, title: "Análisis de errores",          minutes: 15, module: reading, strategy: "Para cada error: sinónimo no reconocido, Not Given vs False, tiempo o vocabulario."}
+      - {id: shadowing,      title: "Shadowing",                    minutes: 10, module: speaking, strategy: "Escucha un fragmento, repítelo imitando ritmo y entonación."}
+  thursday:
+    label: Jueves
+    where: oficina + clase
+    blocks:
+      - {id: speaking_p2,  title: "Speaking Part 2",                minutes: 20, module: speaking, strategy: "1 min de preparación + 2 min de habla. Graba el monólogo."}
+      - {id: doubts,       title: "Dudas para la profesora",        minutes: 10, module: export,   strategy: "Genera la lista de dudas con la grabación/transcripción."}
+  friday:
+    label: Viernes
+    where: remoto
+    blocks:
+      - {id: writing_t1,   title: "Writing Task 1",                 minutes: 20, module: writing,  timed_from_phase: 2, strategy: "4 párrafos: introducción (paráfrasis) → overview sin cifras → cuerpo 1 → cuerpo 2."}
+      - {id: rewrite,      title: "Reescritura",                    minutes: 15, module: writing,  strategy: "Corrige las 3 peores oraciones y vuelve a evaluar."}
+      - {id: grammar,      title: "Gramática y colocaciones del error log", minutes: 40, module: grammar, strategy: "Ataca tus categorías de error más frecuentes."}
+  saturday:
+    label: Sábado
+    where: casa
+    blocks:
+      - {id: listening_full, title: "Listening completo",           minutes: 30, module: listening, strategy: "Un solo intento, sin pausar."}
+      - {id: reading_full,   title: "Reading completo",             minutes: 60, module: reading,   strategy: "3 passages, 60 min. Reparte ~20 min por passage."}
+      - {id: review,         title: "Corrección y error log",       minutes: 45, module: errorlog, strategy: "Corrige con la clave y registra la causa de cada error."}
+  sunday:
+    label: Domingo
+    where: casa
+    blocks:
+      - {id: audit,        title: "Auditoría semanal",              minutes: 20, module: audit,    strategy: "¿Qué medí? ¿Dónde perdí puntos? ¿Por qué? ¿Qué cambio? ¿Cómo me sentí?"}
+      - {id: speaking_p13, title: "Speaking Part 1 y 3",            minutes: 20, module: speaking, strategy: "Respuesta → razón → ejemplo."}
+
+# Variantes por fase (reemplazan los bloques del día; el SRS se añade siempre al final).
+phase_overrides:
+  1:
+    saturday:
+      - {id: listening_sections, title: "Listening por sección",    minutes: 30, module: listening, strategy: "Secciones sueltas según el tipo de pregunta de la semana."}
+      - {id: reading_sections,   title: "Reading por tipo de pregunta", minutes: 60, module: reading, strategy: "Practica solo el tipo de pregunta de la semana."}
+      - {id: review,             title: "Corrección y error log",   minutes: 45, module: errorlog, strategy: "Corrige con la clave y registra la causa de cada error."}
+  3:
+    monday:
+      - {id: sim_writing,  title: "Simulacro de Writing",          minutes: 60, module: writing,  strategy: "Task 1 (20 min) + Task 2 (40 min) seguidas, sin pausas."}
+      - {id: sim_reading,  title: "Simulacro de Reading",          minutes: 60, module: reading,  strategy: "3 passages en 60 min."}
+    saturday:
+      - {id: sim_full,     title: "Simulacro completo",            minutes: 165, module: simulacro, strategy: "Listening → Reading → Writing en una sola tanda (2h45)."}
+
+# Modo diagnóstico (antes del 12 oct): línea base.
+diagnostic:
+  label: Diagnóstico
+  blocks:
+    - {id: dx_listening, title: "Listening completo",             minutes: 30, module: listening, strategy: "Línea base. Sin ayudas."}
+    - {id: dx_reading,   title: "Reading completo",               minutes: 60, module: reading,   strategy: "Línea base. 60 min."}
+    - {id: dx_writing,   title: "Writing T1 + T2",                minutes: 60, module: writing,   strategy: "Línea base. 20 + 40 min."}
+    - {id: dx_speaking,  title: "Speaking (Part 2)",              minutes: 15, module: speaking,  strategy: "Línea base. Graba 2 min."}
+
+rest_day_checklist:
+  - "Documento de identidad (el mismo con el que te inscribiste) a la mano"
+  - "Ruta y hora de llegada al centro de examen confirmadas"
+  - "Dormir temprano; sin estudio nuevo"
+  - "Lápiz, borrador y agua según las reglas del centro"
