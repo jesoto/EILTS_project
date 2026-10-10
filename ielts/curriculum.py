@@ -72,6 +72,7 @@ class Curriculum(BaseModel):
     srs_block: Block
     days: dict[str, Day]
     phase_overrides: dict[int, dict[str, list[Block]]] = {}
+    week_overrides: dict[int, dict[str, list[Block]]] = {}
     diagnostic: dict
     rest_day_checklist: list[str]
 
@@ -90,9 +91,11 @@ class Curriculum(BaseModel):
                 return p
         return self.phases[-1] if n > 0 else self.phases[0]
 
-    def blocks_for(self, weekday: str, phase_id: int) -> list[Block]:
-        """Bloques del día para la fase, con el SRS de 15 min siempre al final."""
-        override = self.phase_overrides.get(phase_id, {}).get(weekday)
+    def blocks_for(self, weekday: str, phase_id: int, week: int = 0) -> list[Block]:
+        """Bloques del día (semana > fase > plan base), con el SRS de 15 min siempre al final."""
+        override = self.week_overrides.get(week, {}).get(weekday)
+        if override is None:
+            override = self.phase_overrides.get(phase_id, {}).get(weekday)
         blocks = list(override if override is not None else self.days[weekday].blocks)
         return blocks + [self.srs_block]
 

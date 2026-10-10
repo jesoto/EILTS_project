@@ -14,6 +14,12 @@ def render_block(block, ctx) -> bool:
     if block.module in ("reading", "listening", "errorlog", "simulacro"):
         from . import ui_receptive
         return ui_receptive.render(block, ctx)
+    if block.module == "audit":
+        from . import ui_audit
+        return ui_audit.render(block, ctx)
+    if block.module == "export":
+        from . import ui_export
+        return ui_export.render(block, ctx)
     if block.module == "speaking":
         from . import ui_speaking
         return ui_speaking.render(block, ctx)

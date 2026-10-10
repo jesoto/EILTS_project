@@ -31,12 +31,12 @@ week_focus:
   3:  {grammar_topics: [t1_tenses_prepositions], t1: [bar, table], t2: [opinion]}
   4:  {grammar_topics: [relatives_concessives], t1: [line, bar, table], t2: [discussion]}
   5:  {grammar_topics: [conditionals],      t1: [pie, mixed], t2: [discussion, opinion]}
-  6:  {grammar_topics: [passive],           t1: [line, bar, pie, table], t2: [problem_solution]}
-  7:  {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [advantages_disadvantages]}
-  8:  {grammar_topics: [inversion_nominalization], t1: [line, bar, pie, table, mixed], t2: [double_question]}
-  9:  {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
-  10: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
-  11: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
+  6:  {grammar_topics: [passive],           t1: [line, bar, pie, table, process, map], t2: [problem_solution]}
+  7:  {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed, process, map], t2: [advantages_disadvantages]}
+  8:  {grammar_topics: [inversion_nominalization], t1: [line, bar, pie, table, mixed, process, map], t2: [double_question]}
+  9:  {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed, process, map], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
+  10: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed, process, map], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
+  11: {grammar_topics: [error_log],         t1: [line, bar, pie, table, mixed, process, map], t2: [opinion, discussion, problem_solution, advantages_disadvantages, double_question]}
 
 # Fase 1: tipo de pregunta de Reading y parte de Listening de cada semana (tipos = Group.type de la ingesta).
 receptive_focus:
@@ -111,6 +111,18 @@ phase_overrides:
       - {id: sim_reading,  title: "Simulacro de Reading",          minutes: 60, module: reading,  strategy: "3 passages en 60 min."}
     saturday:
       - {id: sim_full,     title: "Simulacro completo",            minutes: 165, module: simulacro, strategy: "Listening → Reading → Writing en una sola tanda (2h45)."}
+
+# Excepciones por semana concreta (tienen prioridad sobre phase_overrides).
+week_overrides:
+  6:    # domingo 22 nov: punto de control
+    sunday:
+      - {id: checkpoint, title: "Simulacro completo (punto de control)", minutes: 165, module: simulacro, strategy: "Simulacro completo: decide si mantienes la fecha. ≥6.0 mantener · 5.5-6.0 consultarlo con la profesora · <5.5 considerar mover el examen."}
+      - {id: audit,      title: "Auditoría semanal",                      minutes: 20,  module: audit,     strategy: "Revisa el resultado del simulacro y decide un único cambio concreto."}
+  11:   # semana ligera: simulacros lunes 21 y martes 22
+    monday:
+      - {id: sim_writing, title: "Simulacro de Writing",  minutes: 60,  module: writing,   strategy: "Task 1 (20 min) + Task 2 (40 min) seguidas, sin pausas."}
+    tuesday:
+      - {id: sim_full,    title: "Simulacro completo",    minutes: 165, module: simulacro, strategy: "Listening → Reading → Writing en una sola tanda (2h45)."}
 
 # Modo diagnóstico (antes del 12 oct): línea base.
 diagnostic:

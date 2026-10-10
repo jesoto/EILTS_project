@@ -33,9 +33,9 @@ def get_transcriber():
     return FasterWhisperTranscriber()
 
 
-def plan_for(weekday: str, phase: int, diagnostic: bool = False) -> list[Block]:
+def plan_for(weekday: str, phase: int, diagnostic: bool = False, week: int = 0) -> list[Block]:
     cur = load_curriculum()
-    return cur.diagnostic_blocks() if diagnostic else cur.blocks_for(weekday, phase)
+    return cur.diagnostic_blocks() if diagnostic else cur.blocks_for(weekday, phase, week)
 
 
 def fmt_mmss(seconds: int) -> str:

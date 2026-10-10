@@ -28,6 +28,7 @@ CRITERIA = {
            "ideas that are extended and supported with relevant examples."),
 }
 BANNER = "banda estimada (aproximada)"
+NO_CHART_DATA = "__book_chart__"   # el gráfico es una imagen del libro: el evaluador no ve los datos
 
 
 @lru_cache(maxsize=1)
@@ -56,7 +57,12 @@ def evaluate_writing(provider: LLMProvider, task: str, prompt: str, text: str, *
     cfg = cfg or load_llm_config()
     checks = run_checklist(text, task)
     ta_name, ta_desc = CRITERIA[task]
-    data_block = f"\nUnderlying chart data (for checking accuracy):\n{data_text}\n" if data_text else ""
+    if data_text == NO_CHART_DATA:
+        data_block = ("\nThe chart/diagram is an image you cannot see. Do NOT judge the accuracy of the figures or details; "
+                      "assess Task Achievement only on structure, the overview, grouping of information and consistent "
+                      "reporting, and state in the justification that accuracy could not be verified.\n")
+    else:
+        data_block = f"\nUnderlying chart data (for checking accuracy):\n{data_text}\n" if data_text else ""
     system = load_prompt("writing_evaluate", task_label=TASK_LABEL[task], ta_name=ta_name, ta_desc=ta_desc,
                          prompt=prompt, data_block=data_block, checklist=checklist_summary(checks),
                          words=word_count(text), text=text)
@@ -121,3 +127,22 @@ def feedback_markdown(task: str, prompt: str, text: str, ev: WritingEvaluation) 
     lines += [f"- {s.original} — {s.problema_es}" for s in ev.oraciones_a_reescribir]
     lines += ["", "## Párrafo mejorado", "", ev.parrafo_mejorado.mejorado, "", ev.parrafo_mejorado.notas_es]
     return "\n".join(lines)
+
+
+def book_t1_tasks(task_types: list[str], conn: sqlite3.Connection | None = None, tests=None) -> list[dict]:
+    """Tareas de Writing Task 1 extraídas de los libros (imagen + enunciado), aún no escritas por el usuario."""
+    from ..ingest import schema
+    tests = schema.list_tests() if tests is None else tests
+    used: set[str] = set()
+    if conn is not None:
+        used = {r["prompt"] for r in conn.execute("SELECT prompt FROM writing_submission WHERE task='t1'")}
+    out = []
+    for t in tests:
+        for wt in t.writing:
+            if wt.task != 1 or not wt.image or wt.prompt in used or wt.task_type not in task_types:
+                continue
+            img = schema.DERIVED_DIR / wt.image
+            if img.exists():
+                out.append({"prompt": wt.prompt, "task_type": wt.task_type, "png": img.read_bytes(),
+                            "source": f"{t.book_title} · Test {t.test}"})
+    return out

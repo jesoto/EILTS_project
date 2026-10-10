@@ -137,6 +137,9 @@ def test_session_without_llm_still_saved():
 
 def test_speaking_pages_render(monkeypatch, tmp_path):
     monkeypatch.setenv("IELTS_DB", str(tmp_path / "t.db"))
+    from ielts import audit
+    audit.save_audit(db.connect(tmp_path / "t.db"), 1, measured={}, where_lost="", why="", change_goal="x",
+                     energy=3, anxiety=2)      # el domingo la auditoría debe estar guardada para avanzar
     for weekday, skip, expect in [("thursday", 0, "Part 2"), ("sunday", 1, "Part 1")]:   # domingo: 1.º auditoría
         at = AppTest.from_file(APP, default_timeout=60)
         at.session_state["session"] = {"weekday": weekday, "week": 1, "phase": 1, "diagnostic": False}

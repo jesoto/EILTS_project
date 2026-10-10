@@ -92,3 +92,57 @@ def test_rewrite_evaluation_saved_and_wrong_ones_logged():
     w.save_rewrite(conn, sid, res)
     assert json.loads(conn.execute("SELECT rewrite FROM writing_submission").fetchone()["rewrite"])["resultados"][1]["correcta"] is False
     assert conn.execute("SELECT COUNT(*) c FROM error_log WHERE module='writing_rewrite'").fetchone()["c"] == 1
+
+
+# ---------------------------------------------------------------- gráficos de los libros
+def test_book_t1_tasks_filter_by_type_and_unused(tmp_path, monkeypatch):
+    from ielts.ingest import schema
+    from ielts.ingest.schema import TestData, WritingTask, save_test
+    derived = tmp_path / "derived"
+    monkeypatch.setattr(schema, "DERIVED_DIR", derived)
+    (derived / "tb" / "images").mkdir(parents=True)
+    (derived / "tb" / "images" / "a.png").write_bytes(b"\x89PNG-a")
+    td = TestData(book="tb", book_title="Book", test=1, writing=[
+        WritingTask(task=1, prompt="The map below...", task_type="map", image="tb/images/a.png"),
+        WritingTask(task=1, prompt="The line graph...", task_type="line", image="tb/images/missing.png"),
+        WritingTask(task=2, prompt="Essay?", task_type="opinion")])
+    save_test(td, derived)
+    conn = db.connect(":memory:")
+    assert [t["task_type"] for t in w.book_t1_tasks(["map", "line"], conn)] == ["map"]    # la imagen que falta se omite
+    assert w.book_t1_tasks(["bar"], conn) == []
+    ev = w.WritingEvaluation.model_validate(EVAL)
+    w.save_submission(conn, 6, "t1", "map", "The map below...", "text", ev)
+    assert w.book_t1_tasks(["map"], conn) == []                                          # ya escrita: no se repite
+
+
+def test_evaluator_is_told_it_cannot_see_book_charts():
+    p = FakeProvider(json.dumps(EVAL))
+    w.evaluate_writing(p, "t1", "The map below...", "Overall, the area changed. " * 10, data_text=w.NO_CHART_DATA)
+    system = p.calls[0]["system"]
+    assert "cannot see" in system and "accuracy could not be verified" in system and "__book_chart__" not in system
+
+
+def test_t1_block_prefers_book_chart_and_can_switch_to_synthetic(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from streamlit.testing.v1 import AppTest
+
+    from ielts.ingest import schema
+    from ielts.ingest.schema import TestData, WritingTask, save_test
+    derived = tmp_path / "derived"
+    monkeypatch.setattr(schema, "DERIVED_DIR", derived)
+    monkeypatch.setenv("IELTS_DB", str(tmp_path / "t.db"))
+    from ielts.modules.charts import make_chart
+    (derived / "tb" / "images").mkdir(parents=True)
+    (derived / "tb" / "images" / "a.png").write_bytes(make_chart("line", seed=1).png)
+    save_test(TestData(book="tb", book_title="Book", test=1, writing=[
+        WritingTask(task=1, prompt="The line graph below shows X.", task_type="line", image="tb/images/a.png")]), derived)
+    at = AppTest.from_file(str(Path(__file__).resolve().parent.parent / "app.py"), default_timeout=60)
+    at.session_state["session"] = {"weekday": "friday", "week": 1, "phase": 1, "diagnostic": False}
+    at.switch_page("pages/1_Sesion.py").run()
+    assert not at.exception, at.exception
+    assert any("The line graph below shows X." in i.value for i in at.info)
+    assert any("Fuente: Book · Test 1" in c.value for c in at.caption)
+    next(b for b in at.button if "gráfico generado" in b.label).click().run()
+    assert not at.exception, at.exception
+    assert any("Fuente: gráfico generado" in c.value for c in at.caption)

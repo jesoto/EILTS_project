@@ -13,7 +13,7 @@ from ..llm.schemas import WritingEvaluation
 from ..text import word_count
 from ..ui import get_conn, get_provider
 from . import writing as w
-from .charts import make_chart
+from .charts import CHART_TYPES, make_chart
 
 LIMIT_MIN = {"t1": 20, "t2": 40}
 
@@ -40,14 +40,7 @@ def _render_task(task: str, key: str, ctx) -> bool:
     s = st.session_state.setdefault(key, {})
 
     if "prompt" not in s:
-        if task == "t1":
-            kind = random.choice(focus.t1)
-            kind = kind if kind != "mixed" else "mixed"
-            chart = make_chart(kind, seed=random.randint(1, 10**6))
-            s.update(prompt=chart.prompt, png=chart.png, data_text=chart.data_text, task_type=kind)
-        else:
-            tt, p = w.pick_t2_prompt(focus.t2, conn)
-            s.update(prompt=p, png=None, data_text="", task_type=tt)
+        _new_task(s, task, focus, conn)
 
     timed = ctx["phase"] >= 2
     st.markdown(f"### {w.TASK_LABEL[task]} · `{s['task_type']}`")
@@ -58,6 +51,14 @@ def _render_task(task: str, key: str, ctx) -> bool:
     st.info(s["prompt"])
     if s.get("png"):
         st.image(s["png"])
+    if task == "t1":
+        st.caption(f"Fuente: {s.get('source', '')}")
+        if "evaluation" not in s and s.get("source") != "gráfico generado":
+            if st.button("Usar un gráfico generado en su lugar", key=f"{key}_synth"):
+                for k in ("prompt", "png", "data_text", "task_type", "source"):
+                    s.pop(k, None)
+                s["force_synthetic"] = True
+                st.rerun()
     if task == "t1":
         st.caption("Estructura: Introducción (paráfrasis) → Overview (2 tendencias, sin cifras) → Cuerpo 1 → Cuerpo 2.")
     else:
@@ -92,6 +93,23 @@ def _render_task(task: str, key: str, ctx) -> bool:
     show_evaluation(task, s, ev)
     st.info("Siguiente paso: bloque de **reescritura** (corrige las 3 peores oraciones).")
     return True
+
+
+def _new_task(s: dict, task: str, focus, conn) -> None:
+    """Task 1: se prefiere un gráfico de los libros; si no hay (o no encaja), uno sintético con matplotlib."""
+    if task == "t1":
+        books = w.book_t1_tasks(focus.t1, conn)
+        if books and not s.get("force_synthetic"):
+            b = random.choice(books)
+            s.update(prompt=b["prompt"], png=b["png"], data_text=w.NO_CHART_DATA, task_type=b["task_type"],
+                     source=b["source"])
+            return
+        synthetic = [k for k in focus.t1 if k in CHART_TYPES] or ["line"]
+        chart = make_chart(random.choice(synthetic), seed=random.randint(1, 10**6))
+        s.update(prompt=chart.prompt, png=chart.png, data_text=chart.data_text, task_type=chart.kind, source="gráfico generado")
+    else:
+        tt, p = w.pick_t2_prompt(focus.t2, conn)
+        s.update(prompt=p, png=None, data_text="", task_type=tt, source="enunciado propio")
 
 
 def show_evaluation(task: str, s: dict, ev: WritingEvaluation) -> None:

@@ -18,7 +18,7 @@ if not sel:
 
 cur = load_curriculum()
 conn = get_conn()
-blocks = plan_for(sel["weekday"], sel["phase"], sel["diagnostic"])
+blocks = plan_for(sel["weekday"], sel["phase"], sel["diagnostic"], sel["week"])
 title = "Diagnóstico" if sel["diagnostic"] else cur.days[sel["weekday"]].label
 state_key = f"flow_{sel['week']}_{sel['weekday']}"
 flow = st.session_state.setdefault(state_key, {"idx": 0, "start": time.time(), "secs": {}})

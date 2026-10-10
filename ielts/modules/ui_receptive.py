@@ -24,7 +24,7 @@ BLANK = "—"
 def render(block, ctx) -> bool:
     if block.id in ("error_analysis", "review"):
         return _render_review(block, ctx)
-    if block.id == "sim_full":
+    if block.id in ("sim_full", "checkpoint"):
         return _render_simulacro(ctx)
     skill = "reading" if block.module == "reading" else "listening"
     return _run(skill, MODE.get(block.id, "one"), block, ctx, f"{block.id}")

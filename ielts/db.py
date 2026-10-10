@@ -34,6 +34,12 @@ CREATE TABLE IF NOT EXISTS error_log (
     count INTEGER NOT NULL DEFAULT 1,
     UNIQUE (module, fragment, correction, category)
 );
+CREATE TABLE IF NOT EXISTS error_event (      -- una fila por ocurrencia: permite contar «errores de esta semana»
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    module TEXT NOT NULL,
+    category TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS attempt (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT NOT NULL,
@@ -104,6 +110,24 @@ CREATE TABLE IF NOT EXISTS receptive_error (
     correct_answer TEXT NOT NULL,
     cause TEXT NOT NULL DEFAULT ''
 );
+CREATE TABLE IF NOT EXISTS audit (
+    week INTEGER PRIMARY KEY,
+    date TEXT NOT NULL,
+    measured TEXT NOT NULL DEFAULT '{}',
+    where_lost TEXT NOT NULL DEFAULT '',
+    why TEXT NOT NULL DEFAULT '',
+    change_goal TEXT NOT NULL DEFAULT '',
+    energy INTEGER NOT NULL,
+    anxiety INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS doubt (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT NOT NULL,
+    week INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'manual',   -- manual | error_log | speaking
+    UNIQUE (week, text)
+);
 CREATE TABLE IF NOT EXISTS writing_submission (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     date TEXT NOT NULL,
@@ -169,6 +193,8 @@ def log_error(conn: sqlite3.Connection, module: str, fragment: str, correction: 
            DO UPDATE SET count = count + 1, date = excluded.date""",
         (datetime.now().date().isoformat(), module, fragment.strip(), correction.strip(), category, explanation),
     )
+    conn.execute("INSERT INTO error_event(date, module, category) VALUES (?,?,?)",
+                 (datetime.now().date().isoformat(), module, category))
     if category in LEXICAL_CATEGORIES:
         queue_card_from_error(conn, fragment, correction, category, explanation)
     conn.commit()
@@ -191,10 +217,13 @@ def queue_card_from_error(conn: sqlite3.Connection, fragment: str, correction: s
 
 
 def top_categories(conn: sqlite3.Connection, since: str | None = None, limit: int = 3) -> list[tuple[str, int]]:
-    q = "SELECT category, SUM(count) AS n FROM error_log"
+    """Categorías con más ocurrencias (desde `since`, inclusive). Las causas «other» de Reading/Listening
+    (p. ej. «Not Given vs False») no son categorías lingüísticas y no cuentan."""
+    q = ("SELECT category, COUNT(*) AS n FROM error_event "
+         "WHERE NOT (module IN ('reading', 'listening') AND category = 'other')")
     args: tuple = ()
     if since:
-        q += " WHERE date >= ?"
+        q += " AND date >= ?"
         args = (since,)
     q += " GROUP BY category ORDER BY n DESC, category LIMIT ?"
     return [(r["category"], r["n"]) for r in conn.execute(q, (*args, limit))]

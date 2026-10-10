@@ -1,7 +1,7 @@
 """Inicio: semana actual, fase, cuenta atrás y los 7 botones de práctica."""
 import streamlit as st
 
-from ielts import db
+from ielts import audit, db, progress
 from ielts.calendar import Mode, day_info, days_to_exam, effective_week
 from ielts.curriculum import WEEKDAYS, load_curriculum
 from ielts.ui import get_conn, plan_for, today
@@ -17,13 +17,24 @@ phase = cur.phase_of_week(week)
 wk = cur.week(week)
 
 st.title("📘 IELTS Trainer")
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 if info.mode is Mode.DIAGNOSTIC:
     c1.metric("Semana", "Diagnóstico", help=f"El plan empieza el {cur.start_date:%d/%m/%Y}")
 else:
     c1.metric("Semana", f"{week} de {len(cur.weeks)}")
 c2.metric("Fase", f"{phase.id}. {phase.name}")
 c3.metric("Días al examen", max(days_to_exam(now, cur), 0))
+c4.metric("Racha", f"{progress.streak(conn, now)} días")
+
+goal = audit.current_goal(conn, week)
+if goal:
+    st.info(f"🎯 **Objetivo de esta semana** (de tu auditoría): {goal}")
+warn = audit.load_warning(conn)
+if warn:
+    st.warning(warn)
+cp = progress.checkpoint(conn) if now >= cur.checkpoint_date else None
+if cp:
+    st.success(f"🏁 **Punto de control:** banda estimada (aproximada) {cp['overall']}. {cp['text']}")
 
 if info.mode is Mode.DIAGNOSTIC:
     st.info(f"Modo **diagnóstico**: haz un test completo para tener tu línea base. "
@@ -49,7 +60,7 @@ st.caption("Puedes practicar cualquier día, no solo hoy.")
 cols = st.columns(7)
 for col, weekday in zip(cols, WEEKDAYS):
     day = cur.days[weekday]
-    blocks = plan_for(weekday, phase.id)
+    blocks = plan_for(weekday, phase.id, week=week)
     done = db.day_is_done(conn, week, weekday, [b.id for b in blocks])
     is_today = info.mode is Mode.TRAINING and weekday == info.weekday
     minutes = sum(b.minutes for b in blocks)
