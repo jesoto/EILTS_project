@@ -19,3 +19,6 @@ sa.json
 *service-account*.json
 *credentials*.json
 .streamlit/secrets.*.toml
+oauth.json
+*oauth*.json
+client_secret*.json

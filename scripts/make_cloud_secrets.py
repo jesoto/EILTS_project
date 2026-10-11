@@ -76,9 +76,37 @@ def pending(text: str) -> list[str]:
     return todo
 
 
+def apply_oauth(text: str, oauth: dict) -> tuple[str, list[str]]:
+    """Rellena client_id / client_secret (y redirect_uri si el JSON la trae) SOLO dentro de [auth].
+
+    `oauth` es el JSON descargado de Google: {"web": {...}} o {"installed": {...}}. Devuelve (texto, campos_actualizados).
+    """
+    client = oauth.get("web") or oauth.get("installed") or next(iter(oauth.values()), {})
+    if not client.get("client_id") or not client.get("client_secret"):
+        raise ValueError("el JSON no trae client_id y client_secret")
+    updates = {"client_id": client["client_id"], "client_secret": client["client_secret"]}
+    redirects = [u for u in client.get("redirect_uris", []) if u.startswith("https://") and u.endswith("/oauth2callback")]
+    out, section, changed = [], "", []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            section = stripped.strip("[]")
+        key = stripped.split("=", 1)[0].strip() if "=" in stripped else ""
+        if section == "auth" and key in updates:
+            line = f"{key} = {q(updates[key])}"
+            changed.append(key)
+        elif section == "auth" and key == "redirect_uri" and redirects and "TU-APP" in line:
+            line = f"redirect_uri = {q(redirects[0])}"
+            changed.append("redirect_uri")
+        out.append(line)
+    return "\n".join(out) + "\n", changed
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--credentials", required=True, help="clave JSON de la cuenta de servicio")
+    ap.add_argument("--apply-oauth", metavar="OAUTH.JSON",
+                    help="rellena client_id/client_secret en un archivo ya generado (--out) y termina")
+    ap.add_argument("--credentials", help="clave JSON de la cuenta de servicio")
     ap.add_argument("--bucket", help="nombre del bucket (por defecto GCS_BUCKET)")
     ap.add_argument("--resources-prefix", default="", help="carpeta del bucket con tus libros/audios (p. ej. Resources_IELTS)")
     ap.add_argument("--email", default="tu-correo@gmail.com", help="correo(s) con acceso, separados por comas")
@@ -88,6 +116,25 @@ def main() -> int:
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--no-openai-key", action="store_true", help="no copiar tu OPENAI_API_KEY de .env al archivo")
     args = ap.parse_args()
+
+    if args.apply_oauth:
+        target = Path(args.out)
+        if not target.exists():
+            sys.exit(f"No existe {target}: genera primero el archivo con --credentials.")
+        try:
+            new_text, changed = apply_oauth(target.read_text(encoding="utf-8"), json.loads(Path(args.apply_oauth).read_text(encoding="utf-8")))
+        except (ValueError, json.JSONDecodeError) as e:
+            sys.exit(f"No se pudo leer el OAuth: {e}")
+        target.write_text(new_text, encoding="utf-8")
+        print(f"Actualizado {target.name}: {', '.join(changed)}.")
+        left = pending(new_text)
+        if left:
+            print("\nTe falta rellenar a mano:")
+            for t in left:
+                print("  -", t)
+        return 0
+    if not args.credentials:
+        ap.error("falta --credentials (o usa --apply-oauth)")
 
     sa = json.loads(Path(args.credentials).read_text(encoding="utf-8"))
     if sa.get("type") != "service_account" or not sa.get("private_key"):

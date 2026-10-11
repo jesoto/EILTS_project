@@ -83,3 +83,59 @@ def test_generated_secrets_file_is_git_ignored():
     assert r.returncode == 0
     r2 = subprocess.run(["git", "check-ignore", "-q", ".streamlit/secrets.toml.example"], cwd=ROOT)
     assert r2.returncode == 1                                                      # el ejemplo SÍ se versiona
+
+
+# ---------------------------------------------------------------- --apply-oauth
+OAUTH = {"web": {"client_id": "123-abc.apps.googleusercontent.com", "client_secret": "GOCSPX-test-secret-value",
+                 "project_id": "p", "auth_uri": "https://accounts.google.com/o/oauth2/auth"}}
+
+
+def test_apply_oauth_only_touches_the_auth_section_and_keeps_manual_edits(tmp_path, sa_file):
+    path, pem = sa_file
+    out = tmp_path / "s.toml"
+    assert run(["--credentials", str(path), "--bucket", "b", "--email", "yo@gmail.com", "--out", str(out)]).returncode == 0
+    before = tomllib.loads(out.read_text(encoding="utf-8"))
+    out.write_text(out.read_text(encoding="utf-8").replace("TU-APP", "mi-app"), encoding="utf-8")   # edición manual previa
+    oauth = tmp_path / "oauth.json"
+    oauth.write_text(json.dumps(OAUTH), encoding="utf-8")
+    r = run(["--apply-oauth", str(oauth), "--out", str(out)])
+    assert r.returncode == 0 and "client_id, client_secret" in r.stdout
+    assert "GOCSPX-test-secret-value" not in r.stdout + r.stderr                                   # nunca se imprime
+    after = tomllib.loads(out.read_text(encoding="utf-8"))
+    assert after["auth"]["client_id"] == "123-abc.apps.googleusercontent.com" and after["auth"]["client_secret"] == "GOCSPX-test-secret-value"
+    assert after["gcp_service_account"]["client_id"] == before["gcp_service_account"]["client_id"] == "99"   # la otra sección intacta
+    assert after["gcp_service_account"]["private_key"] == pem and after["ALLOWED_EMAILS"] == "yo@gmail.com"
+    assert after["auth"]["cookie_secret"] == before["auth"]["cookie_secret"]                         # no se regenera
+    assert after["auth"]["redirect_uri"] == "https://mi-app.streamlit.app/oauth2callback"
+    assert "client_secret" not in " ".join(l for l in r.stdout.splitlines() if "falta" in l.lower() or l.startswith("  -"))
+
+
+def test_apply_oauth_takes_redirect_uri_from_the_json_and_handles_installed_clients(tmp_path, sa_file):
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import make_cloud_secrets as m
+    base = m.build({"type": "service_account", "private_key": "k"}, bucket="b", resources_prefix="", email="e@x.com",
+                   app_url="https://TU-APP.streamlit.app", tz="UTC", exam_date="", openai_key="sk-x", cookie_secret="c" * 48)
+    web = {"web": {**OAUTH["web"], "redirect_uris": ["http://localhost:8501/oauth2callback", "https://real.streamlit.app/oauth2callback"]}}
+    text, changed = m.apply_oauth(base, web)
+    assert set(changed) == {"client_id", "client_secret", "redirect_uri"}
+    assert tomllib.loads(text)["auth"]["redirect_uri"] == "https://real.streamlit.app/oauth2callback"
+    text2, changed2 = m.apply_oauth(base, {"installed": OAUTH["web"]})
+    assert "redirect_uri" not in changed2 and tomllib.loads(text2)["auth"]["client_id"].startswith("123-abc")
+    with pytest.raises(ValueError):
+        m.apply_oauth(base, {"web": {"client_id": "x"}})
+
+
+def test_apply_oauth_requires_an_existing_file_and_valid_json(tmp_path):
+    oauth = tmp_path / "oauth.json"
+    oauth.write_text(json.dumps(OAUTH), encoding="utf-8")
+    r = run(["--apply-oauth", str(oauth), "--out", str(tmp_path / "nope.toml")])
+    assert r.returncode != 0 and "genera primero" in (r.stdout + r.stderr)
+    out = tmp_path / "s.toml"
+    out.write_text('[auth]\nclient_id = "x"\n', encoding="utf-8")
+    oauth.write_text("{no es json", encoding="utf-8")
+    assert run(["--apply-oauth", str(oauth), "--out", str(out)]).returncode != 0
+
+
+def test_oauth_client_files_are_git_ignored():
+    for name in ("oauth.json", "client_secret_1234.apps.googleusercontent.com.json", "my-oauth-client.json"):
+        assert subprocess.run(["git", "check-ignore", "-q", name], cwd=ROOT).returncode == 0, name
