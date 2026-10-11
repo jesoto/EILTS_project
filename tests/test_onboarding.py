@@ -274,3 +274,12 @@ def test_no_book_or_data_file_is_tracked_except_the_resources_readme():
 
 def test_schema_default_store_is_local_in_local_mode(clean_env):
     assert schema.derived_store().root.name == "derived"
+
+
+def test_service_account_key_files_are_git_ignored():
+    """Una clave de cuenta de servicio dentro del proyecto (p. ej. sa.json) no debe poder subirse con `git add -A`."""
+    for name in ("sa.json", "my-project-sa.json", "gcp-service-account.json", "google-credentials.json"):
+        r = subprocess.run(["git", "check-ignore", "-q", name], cwd=ROOT)
+        assert r.returncode == 0, f"{name} no está en .gitignore"
+    assert not [f for f in tracked_files() if f.name.lower().endswith(".json") and
+                any(k in f.name.lower() for k in ("sa.json", "service-account", "credentials"))]

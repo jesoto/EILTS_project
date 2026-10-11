@@ -29,8 +29,10 @@ class Item:
         return f"{self.namespace}/{self.key}"
 
 
-def cloud_stores(bucket: str, client=None) -> dict[str, Store]:
-    return {ns: GCSStore(bucket, ns + "/", client=client) for ns in ("derived", "resources", "recordings", "db")}
+def cloud_stores(bucket: str, client=None, resources_prefix: str | None = None) -> dict[str, Store]:
+    from .storage import cloud_prefix
+    return {ns: GCSStore(bucket, cloud_prefix(ns, resources_prefix), client=client)
+            for ns in ("derived", "resources", "recordings", "db")}
 
 
 def _ctype(p: Path | str) -> str:

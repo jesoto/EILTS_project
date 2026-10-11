@@ -214,6 +214,12 @@ def run_live_checks(transport: httpx.BaseTransport | None = None) -> list[Check]
             store = make_store("derived")
             n = len(store.list(""))
             out.append(Check("live_gcs", OK, f"Google Cloud Storage accesible ({n} archivos en derived/)"))
+            res = make_store("resources")
+            mp3 = [k for k in res.list("") if k.lower().endswith(".mp3")]
+            out.append(Check("live_gcs_resources", OK if mp3 else WARN,
+                             f"Recursos en el bucket ({getattr(res, 'prefix', '')}): {len(mp3)} audios",
+                             "" if mp3 else "No hay audios en esa carpeta",
+                             "" if mp3 else "Sube tus audios o define GCS_RESOURCES_PREFIX con la carpeta donde están"))
             info = store.public_access_info() if hasattr(store, "public_access_info") else {}
             if info.get("public_access_prevention") != "enforced":
                 out.append(Check("live_gcs_private", WARN, "El bucket no tiene activada la prevención de acceso público",

@@ -70,6 +70,11 @@ uv run python scripts/sync_to_cloud.py --bucket TU_BUCKET --credentials "C:\ruta
 Sube: tests extraídos y sus imágenes (`derived/`), **solo los audios que usan tus tests** (no tus PDF), tu progreso (`db/ielts.db`, solo si aún no existe en la nube)
 y, con `--recordings`, tus grabaciones. Es incremental: puedes repetirlo cuando ingieras o verifiques más tests.
 `--force-db` sobrescribe la base de la nube con la local (úsalo con cuidado).
+`--skip-db` no toca la base (recomendado si tu base local solo tiene datos de prueba).
+
+**¿Ya subiste tus libros al bucket por otro camino** (p. ej. arrastrando la carpeta desde la consola)? No hace falta subirlos otra vez:
+indica la carpeta donde están con `--resources-prefix Resources_IELTS` y añade `GCS_RESOURCES_PREFIX = "Resources_IELTS/"` a los Secrets.
+Las rutas de los audios son las mismas que en tu carpeta `resources/`, así que se reconocen sin cambios.
 
 ## 7. Streamlit Community Cloud
 1. <https://share.streamlit.io> → inicia sesión con GitHub → **Create app** → tu repositorio, rama `main`, archivo `app.py`.

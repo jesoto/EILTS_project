@@ -29,6 +29,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--bucket", help="nombre del bucket (por defecto GCS_BUCKET)")
     ap.add_argument("--credentials", help="ruta a la clave JSON de la cuenta de servicio")
+    ap.add_argument("--resources-prefix", help="carpeta del bucket donde están tus libros/audios (por defecto GCS_RESOURCES_PREFIX o resources/)")
     ap.add_argument("--dry-run", action="store_true", help="solo muestra qué se subiría")
     ap.add_argument("--yes", action="store_true", help="no pedir confirmación")
     ap.add_argument("--force-db", action="store_true", help="sobrescribe la base de datos de la nube con la local")
@@ -53,7 +54,7 @@ def main() -> int:
     if not items:
         sys.exit("No hay nada que subir: ejecuta primero scripts/ingest.py")
 
-    stores = sync.cloud_stores(bucket)
+    stores = sync.cloud_stores(bucket, resources_prefix=args.resources_prefix)
     try:
         sync.plan(items, stores, force_db=args.force_db)
     except Exception as e:  # noqa: BLE001

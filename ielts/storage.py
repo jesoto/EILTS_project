@@ -277,13 +277,24 @@ def _local_roots() -> dict[str, Path]:
     }
 
 
+def cloud_prefix(namespace: str, resources_prefix: str | None = None) -> str:
+    """Prefijo del espacio dentro del bucket. `resources` puede apuntar a una carpeta ya existente
+    (GCS_RESOURCES_PREFIX, p. ej. «Resources_IELTS/»), para no volver a subir los libros."""
+    if namespace == "resources":
+        custom = (resources_prefix if resources_prefix is not None else secret("GCS_RESOURCES_PREFIX")) or ""
+        custom = custom.strip().strip("/")
+        if custom:
+            return custom + "/"
+    return namespace + "/"
+
+
 def make_store(namespace: str, local_root: Path | None = None) -> Store:
     """Store del espacio `namespace`: GCS en modo cloud, carpeta local en modo local."""
     if load_app_config().is_cloud:
         bucket = secret("GCS_BUCKET")
         if not bucket:
             raise RuntimeError("Modo cloud sin GCS_BUCKET: defínelo en los secrets de Streamlit.")
-        return GCSStore(bucket, namespace + "/")
+        return GCSStore(bucket, cloud_prefix(namespace))
     return DirStore(local_root or _local_roots()[namespace])
 
 
