@@ -20,6 +20,9 @@ def get_provider(cfg: LLMConfig | None = None) -> LLMProvider:
     if cfg.provider == "ollama":
         from .ollama_provider import OllamaProvider
         return OllamaProvider(cfg)
+    if cfg.provider == "openai":
+        from .openai_provider import OpenAIProvider
+        return OpenAIProvider(cfg)
     if cfg.provider == "anthropic":
         from .anthropic_provider import AnthropicProvider
         return AnthropicProvider()

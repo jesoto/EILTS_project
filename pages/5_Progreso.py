@@ -5,7 +5,9 @@ import pandas as pd
 import streamlit as st
 
 from ielts import audit, db, progress
+from ielts.config import load_llm_config
 from ielts.curriculum import load_curriculum
+from ielts.llm.usage import usage_summary
 from ielts.ui import get_conn, today
 
 st.set_page_config(page_title="Progreso · IELTS Trainer", page_icon="📈", layout="wide")
@@ -78,3 +80,14 @@ if rows:
                    "Objetivo": r["change_goal"]} for r in rows], hide_index=True, use_container_width=True)
 else:
     st.caption("Aún no hay auditorías. Se hacen los domingos.")
+
+st.subheader("Modelo de lenguaje")
+llm = load_llm_config()
+st.markdown(f"Proveedor activo: **{llm.provider}** · modelo **{llm.active_model}**")
+if llm.provider == "openai":
+    u = usage_summary(cfg=llm)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Llamadas a la API", u["calls"])
+    c2.metric("Tokens (entrada / salida)", f"{u['prompt_tokens']:,} / {u['completion_tokens']:,}")
+    c3.metric("Gasto estimado", f"${u['cost_usd']:.3f}" if u["priced"] else "—",
+              help="Estimación con los precios de config.toml; el saldo real está en tu cuenta de OpenAI.")

@@ -5,7 +5,11 @@ La metodología y el calendario están en [CLAUDE.md](CLAUDE.md) y [data/curricu
 
 ## Requisitos
 - [uv](https://docs.astral.sh/uv/) (instala Python 3.12 y las dependencias).
-- [Ollama](https://ollama.com) con un modelo para evaluar: `ollama pull gemma3:12b` (el modelo se cambia en [config.toml](config.toml)).
+- Un modelo de lenguaje para evaluar, a elegir en [config.toml](config.toml) (`provider`):
+  - **`openai`** (por defecto): pon `OPENAI_API_KEY=...` en un archivo `.env` en la carpeta principal (está en `.gitignore`).
+    Modelo `gpt-4.1-mini`: ~0,002 USD por evaluación de Writing. El gasto estimado aparece en la página Progreso.
+  - **`ollama`** (local, gratis): `ollama pull gemma3:12b`. Más lento y con explicaciones menos fiables.
+  - Con OpenAI se envían a su API tus textos (ensayos, transcripciones de Speaking, ejercicios); el audio y Whisper siguen siendo locales.
 - Carpeta `resources/` con tus libros y audios (se lee en local; está en `.gitignore`).
 
 ## Uso
@@ -26,7 +30,7 @@ uv run pytest                            # tests
 | `IELTS_TODAY=2026-10-14` | Simula otra fecha (para probar el plan) |
 | `IELTS_DB=ruta.db` | Usa otra base de datos |
 | `IELTS_DERIVED=carpeta` | Usa otra carpeta de tests ingeridos |
-| `IELTS_LLM_MODEL`, `IELTS_OLLAMA_HOST`, `IELTS_STT_MODEL` | Sobrescriben `config.toml` |
+| `IELTS_LLM_PROVIDER`, `IELTS_OPENAI_MODEL`, `IELTS_LLM_MODEL`, `IELTS_OLLAMA_HOST`, `IELTS_STT_MODEL` | Sobrescriben `config.toml` |
 
 ## Notas
 - Las bandas que muestra la app son **estimaciones aproximadas** de un modelo local: úsalas para ver tendencias.

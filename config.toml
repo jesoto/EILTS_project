@@ -1,9 +1,13 @@
 # Configuración del LLM. El modelo NUNCA va hardcodeado en el código.
 # Se puede sobrescribir con variables de entorno: IELTS_LLM_PROVIDER, IELTS_LLM_MODEL, IELTS_OLLAMA_HOST.
 [llm]
-provider = "ollama"
-model = "gemma3:12b"
+provider = "openai"           # "openai" (API, usa OPENAI_API_KEY del .env) o "ollama" (local)
+model = "gemma3:12b"          # modelo de Ollama
 host = "http://localhost:11434"
+openai_model = "gpt-4.1-mini" # barato y sin tokens de razonamiento ocultos
+# Precios para estimar el gasto (USD por millón de tokens). Compruébalos en la página de precios de OpenAI.
+price_in_per_m = 0.40
+price_out_per_m = 1.60
 num_ctx = 8192
 timeout_s = 300
 max_retries = 2          # reintentos si el JSON no valida
