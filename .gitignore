@@ -18,3 +18,4 @@ sa.json
 *-sa.json
 *service-account*.json
 *credentials*.json
+.streamlit/secrets.*.toml

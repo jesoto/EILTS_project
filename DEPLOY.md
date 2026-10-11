@@ -76,6 +76,15 @@ y, con `--recordings`, tus grabaciones. Es incremental: puedes repetirlo cuando 
 indica la carpeta donde están con `--resources-prefix Resources_IELTS` y añade `GCS_RESOURCES_PREFIX = "Resources_IELTS/"` a los Secrets.
 Las rutas de los audios son las mismas que en tu carpeta `resources/`, así que se reconocen sin cambios.
 
+## 6 bis. Generar los Secrets automáticamente
+En vez de copiar a mano los campos de la clave JSON, genera el archivo completo (se guarda en `.streamlit/secrets.cloud.toml`, ignorado por git, y **nunca imprime tus claves**):
+```powershell
+uv run python scripts/make_cloud_secrets.py --credentials "C:/ruta/clave.json" --bucket TU_BUCKET `
+    --resources-prefix Resources_IELTS --email tu-correo@gmail.com --app-url https://TU-APP.streamlit.app
+```
+Copia tu `OPENAI_API_KEY` de `.env` y rellena `cookie_secret` al azar. Solo te quedará pegar a mano `client_id` y `client_secret` de Google OAuth (paso 5).
+Cada ejecución genera una `cookie_secret` nueva y sobrescribe el archivo: ejecútalo una vez con todos los parámetros y edita después los dos valores de OAuth.
+
 ## 7. Streamlit Community Cloud
 1. <https://share.streamlit.io> → inicia sesión con GitHub → **Create app** → tu repositorio, rama `main`, archivo `app.py`.
 2. En **App URL** pon el subdominio que elegiste en el paso 5.
