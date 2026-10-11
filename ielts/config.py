@@ -146,7 +146,7 @@ def load_llm_config(path: Path | None = None) -> LLMConfig:
 
 @dataclass(frozen=True)
 class STTConfig:
-    provider: str = "local"           # local (faster-whisper) | openai (API, para cloud)
+    provider: str = "auto"            # auto (cloud→openai, local→local) | local (faster-whisper) | openai (API)
     model: str = "small"
     device: str = "cpu"
     compute_type: str = "int8"

@@ -38,8 +38,9 @@ def get_provider():
 
 @st.cache_resource
 def get_transcriber():
-    from .stt import FasterWhisperTranscriber
-    return FasterWhisperTranscriber()
+    from .llm.usage import DbUsage
+    from .stt import make_transcriber
+    return make_transcriber(usage=DbUsage(get_conn()))
 
 
 def plan_for(weekday: str, phase: int, diagnostic: bool = False, week: int = 0) -> list[Block]:
