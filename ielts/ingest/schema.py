@@ -114,10 +114,19 @@ def test_path(book: str, test: int, root: Path | None = None) -> Path:
     return (root or DERIVED_DIR) / book / f"test{test}.json"
 
 
+_LIST_CACHE: dict[tuple, tuple[float, list]] = {}
+LIST_CACHE_TTL = 30.0           # segundos; solo para stores remotos (cacheable)
+
+
+def clear_cache() -> None:
+    _LIST_CACHE.clear()
+
+
 def save_test(t: TestData, root: Path | None = None) -> str:
     """Guarda el test; devuelve su clave dentro del store."""
     key = test_key(t.book, t.test)
     derived_store(root).write_bytes(key, t.model_dump_json(indent=1).encode("utf-8"), content_type="application/json")
+    clear_cache()
     return key
 
 
@@ -129,10 +138,24 @@ def load_test(book: str, test: int, root: Path | None = None) -> TestData | None
     return TestData.model_validate_json(store.read_text(key))
 
 
-def list_tests(root: Path | None = None) -> list[TestData]:
-    store = derived_store(root)
+def _read_all(store) -> list[TestData]:
     out = []
     for key in store.list(""):
         if re.fullmatch(r"[^/]+/test\d+\.json", key):
             out.append(TestData.model_validate(json.loads(store.read_text(key))))
     return out
+
+
+def list_tests(root: Path | None = None) -> list[TestData]:
+    """Todos los tests. En la nube se cachea 30 s (cada recarga de la app leería los JSON del bucket)."""
+    import time
+    store = derived_store(root)
+    if not getattr(store, "cacheable", False):
+        return _read_all(store)
+    ck = (type(store).__name__, getattr(store, "_bucket_name", ""), getattr(store, "prefix", ""))
+    hit = _LIST_CACHE.get(ck)
+    if hit and time.monotonic() - hit[0] < LIST_CACHE_TTL:
+        return [t.model_copy(deep=True) for t in hit[1]]      # copias: la página de verificación edita en sitio
+    tests = _read_all(store)
+    _LIST_CACHE[ck] = (time.monotonic(), tests)
+    return [t.model_copy(deep=True) for t in tests]

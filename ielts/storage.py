@@ -22,6 +22,8 @@ class ConflictError(RuntimeError):
 
 
 class Store(ABC):
+    cacheable = False          # True en stores remotos: se pueden cachear lecturas repetidas
+
     @abstractmethod
     def read_bytes(self, key: str) -> bytes: ...
 
@@ -40,6 +42,13 @@ class Store(ABC):
 
     @abstractmethod
     def version(self, key: str) -> str | None: ...
+
+    def size(self, key: str) -> int | None:
+        """Tamaño en bytes (None si no existe). Sirve para no volver a subir lo que no cambió."""
+        try:
+            return len(self.read_bytes(key))
+        except FileNotFoundError:
+            return None
 
     def url(self, key: str, expires: int = 3600) -> str | None:
         """URL temporal para que el navegador lea el archivo (solo nube); None si no aplica."""
@@ -107,6 +116,10 @@ class DirStore(Store):
     def exists(self, key):
         return self._p(key).is_file()
 
+    def size(self, key):
+        p = self._p(key)
+        return p.stat().st_size if p.is_file() else None
+
     def list(self, prefix=""):
         if not self.root.exists():
             return []
@@ -147,6 +160,9 @@ class MemoryStore(Store):
     def exists(self, key):
         return key in self._d
 
+    def size(self, key):
+        return len(self._d[key][0]) if key in self._d else None
+
     def list(self, prefix=""):
         return sorted(k for k in self._d if k.startswith(prefix))
 
@@ -154,11 +170,13 @@ class MemoryStore(Store):
         self._d.pop(key, None)
 
     def url(self, key, expires=3600):
-        return f"memory://{key}" if key in self._d else None
+        return f"https://memory.invalid/{key}?sig=fake" if key in self._d else None
 
 
 class GCSStore(Store):
     """Un prefijo dentro de un bucket de Google Cloud Storage (privado)."""
+
+    cacheable = True
 
     def __init__(self, bucket: str, prefix: str = "", client=None):
         self.prefix = prefix if not prefix or prefix.endswith("/") else prefix + "/"
@@ -207,6 +225,21 @@ class GCSStore(Store):
 
     def exists(self, key):
         return self._blob(key).exists()
+
+    def size(self, key):
+        blob = self.bucket.get_blob(self.prefix + key)
+        return int(blob.size) if blob is not None and blob.size is not None else None
+
+    def public_access_info(self) -> dict:
+        """Cómo está protegido el bucket: prevención de acceso público y acceso uniforme."""
+        bucket = self.bucket
+        try:
+            bucket.reload()
+        except Exception:  # noqa: BLE001
+            pass
+        cfg = getattr(bucket, "iam_configuration", None)
+        return {"public_access_prevention": getattr(cfg, "public_access_prevention", None),
+                "uniform": bool(getattr(cfg, "uniform_bucket_level_access_enabled", False))}
 
     def list(self, prefix=""):
         _ = self.bucket                      # inicializa el cliente

@@ -194,5 +194,51 @@ def test_audio_src_is_signed_url_in_cloud_and_local_path_otherwise(tmp_path, mon
     mem = MemoryStore()
     mem.write_bytes("a.mp3", b"x")
     monkeypatch.setattr(storage, "resources_store", lambda: mem)
-    assert ui.audio_src("a.mp3") == "memory://a.mp3"
+    assert ui.audio_src("a.mp3") == "https://memory.invalid/a.mp3?sig=fake"
     assert derived_store(tmp_path / "d").root == tmp_path / "d"
+
+
+def test_gcs_fake_matches_the_real_library_api_surface():
+    """El cliente falso solo vale si la librería real tiene los mismos métodos y parámetros que usa GCSStore."""
+    import inspect
+
+    from google.cloud import storage as gcs
+    blob_params = inspect.signature(gcs.Blob.upload_from_string).parameters
+    assert {"data", "content_type", "if_generation_match"} <= set(blob_params)
+    assert {"version", "expiration", "method"} <= set(inspect.signature(gcs.Blob.generate_signed_url).parameters)
+    for name in ("exists", "download_as_bytes", "delete", "reload"):
+        assert callable(getattr(gcs.Blob, name)), name
+    assert callable(gcs.Bucket.blob) and callable(gcs.Bucket.get_blob) and callable(gcs.Bucket.reload)
+    assert "prefix" in inspect.signature(gcs.Client.list_blobs).parameters
+    assert callable(gcs.Client.bucket)
+    for prop in ("generation", "size"):
+        assert isinstance(getattr(gcs.Blob, prop), property), prop
+    assert gcs.Blob("a/b", gcs.Bucket(client=None, name="bkt")).name == "a/b"          # `name` es atributo de instancia
+    iam = gcs.Bucket.iam_configuration
+    assert isinstance(iam, property)
+    from google.cloud.storage.bucket import IAMConfiguration
+    for prop in ("public_access_prevention", "uniform_bucket_level_access_enabled"):
+        assert isinstance(getattr(IAMConfiguration, prop), property), prop
+    from google.api_core import exceptions
+    assert exceptions.PreconditionFailed.code == 412 and exceptions.NotFound.code == 404   # lo que GCSStore interpreta
+
+
+def test_gcs_client_builds_credentials_from_service_account_secrets(monkeypatch):
+    """gcs_client() convierte [gcp_service_account] en credenciales (clave RSA de prueba generada al vuelo, sin red)."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    pem = key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
+                            serialization.NoEncryption()).decode()
+    info = {"type": "service_account", "project_id": "proj-x", "private_key_id": "kid", "private_key": pem,
+            "client_email": "ielts-app@proj-x.iam.gserviceaccount.com", "client_id": "1",
+            "token_uri": "https://oauth2.googleapis.com/token"}
+    monkeypatch.setattr(storage, "secret_section", lambda name: info if name == "gcp_service_account" else {})
+    storage.gcs_client.cache_clear()
+    client = storage.gcs_client()
+    assert client.project == "proj-x" and client._credentials.service_account_email == info["client_email"]
+    store = GCSStore("bkt", "resources/", client=client)
+    url = store.url("Book/T1 AUDIO 1.mp3", expires=600)                 # firma V4 local con la clave: no necesita red
+    assert url.startswith("https://storage.googleapis.com/bkt/resources/Book/T1%20AUDIO%201.mp3?")
+    assert "X-Goog-Signature=" in url and "X-Goog-Expires=600" in url and "X-Goog-Algorithm=GOOG4-RSA-SHA256" in url
+    storage.gcs_client.cache_clear()

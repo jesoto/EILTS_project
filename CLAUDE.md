@@ -11,12 +11,12 @@ Idioma de la interfaz: español. Contenido de ejercicios: inglés. Feedback: exp
 ## Restricciones técnicas
 
 - **Stack:** Python 3.11+, Streamlit, SQLite (vía SQLAlchemy o sqlite3), pydantic para esquemas.
-- **LLM local:** Ollama. Toda llamada pasa por una interfaz `LLMProvider` con implementación `OllamaProvider` (y un stub `AnthropicProvider` para el futuro). El modelo se configura en `config.toml` / `.env`, nunca hardcodeado.
+- **LLM:** toda llamada pasa por una interfaz `LLMProvider` con `OpenAIProvider` (por defecto, clave en `.env`/secrets) y `OllamaProvider` (local, gratis); stub `AnthropicProvider` para el futuro. El modelo se configura en `config.toml` / `.env`, nunca hardcodeado.
 - **Respuestas del LLM siempre en JSON validado con pydantic**, con reintento (máx. 2) si el JSON no valida. Temperatura baja (≤0.3) para evaluación, más alta (~0.8) para generar ejercicios.
 - **Speech-to-text:** `faster-whisper` local, con timestamps por palabra.
 - **PDFs:** PyMuPDF (`fitz`). Los PDFs tienen texto seleccionable (no requieren OCR).
 - **`resources/` está en `.gitignore`.** Contiene libros y audios con copyright: solo se leen localmente, nunca se suben, nunca se copian textos completos a archivos versionados. Los índices derivados (JSON de tests, claves de respuesta) van en `data/derived/`, también ignorado por git.
-- La app corre local (`streamlit run app.py`). No asumir despliegue en la nube.
+- La app corre local por defecto (`streamlit run app.py`). Existe un modo `cloud` opcional (Streamlit Cloud + Google Cloud Storage privado + login de Google; ver `DEPLOY.md`). Quien clone el repo pone sus propios libros en `resources/` y su propia clave de OpenAI.
 - Las bandas que estime el LLM se muestran siempre como **"banda estimada (aproximada)"**.
 
 ---

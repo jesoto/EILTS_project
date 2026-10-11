@@ -248,11 +248,21 @@ def test_example_files_exist_and_contain_no_real_secrets():
 
 def test_no_tracked_file_contains_an_openai_key_or_private_key():
     pattern = re.compile(r"sk-(?:proj-)?[A-Za-z0-9_-]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----\n[A-Za-z0-9+/=\n]{40,}")
+    placeholder = re.compile(r"SECRET|TEST|FAKE|EXAMPLE|DUMMY|XXXX|\.\.\.", re.I)      # claves de mentira usadas en los tests
     for f in tracked_files():
         if f.suffix.lower() in {".png", ".pdf", ".mp3", ".wav", ".lock"} or not f.is_file():
             continue
         text = f.read_text(encoding="utf-8", errors="ignore")
-        assert not pattern.search(text), f"posible secreto en {f.relative_to(ROOT)}"
+        real = [m.group(0) for m in pattern.finditer(text) if not placeholder.search(m.group(0))]
+        assert not real, f"posible secreto en {f.relative_to(ROOT)}"
+
+
+def test_secret_scanner_would_catch_a_real_looking_key():
+    pattern = re.compile(r"sk-(?:proj-)?[A-Za-z0-9_-]{30,}")
+    placeholder = re.compile(r"SECRET|TEST|FAKE|EXAMPLE|DUMMY|XXXX|\.\.\.", re.I)
+    looks_real = "OPENAI_API_KEY=" + "sk-" + "proj-aB3dE6gH9jK2mN5pQ8sT1vW4yZ7cF0hJ3lO6rU9x"   # por partes: el escáner no ve el literal
+    assert [m for m in pattern.findall(looks_real) if not placeholder.search(m)]
+    assert not [m for m in pattern.findall("sk-proj-SUPER-SECRET-VALUE-0123456789-abcdefgh") if not placeholder.search(m)]
 
 
 def test_no_book_or_data_file_is_tracked_except_the_resources_readme():
