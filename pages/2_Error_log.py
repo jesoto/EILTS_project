@@ -5,9 +5,9 @@ import streamlit as st
 
 from ielts import db
 from ielts.modules import errorlog as el
-from ielts.ui import get_conn, today
+from ielts.ui import get_conn, page_setup, today
 
-st.set_page_config(page_title="Error log · IELTS Trainer", page_icon="📝", layout="wide")
+page_setup("Error log · IELTS Trainer", "📝")
 st.title("📝 Error log")
 conn = get_conn()
 

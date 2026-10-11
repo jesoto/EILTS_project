@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Entrenador local de IELTS Academic (Streamlit + Ollama)"
 requires-python = ">=3.11"
 dependencies = [
-    "streamlit>=1.40",
+    "streamlit>=1.42",
+    "Authlib>=1.3.2",      # login OIDC (st.login)
     "pydantic>=2.6",
     "pyyaml>=6.0",
     "httpx>=0.27",

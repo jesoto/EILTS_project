@@ -6,9 +6,9 @@ import streamlit as st
 from ielts import db
 from ielts.curriculum import load_curriculum
 from ielts.modules.registry import render_block
-from ielts.ui import fmt_mmss, get_conn, plan_for
+from ielts.ui import fmt_mmss, get_conn, page_setup, plan_for
 
-st.set_page_config(page_title="Sesión · IELTS Trainer", page_icon="⏱️", layout="wide")
+page_setup("Sesión · IELTS Trainer", "⏱️")
 
 sel = st.session_state.get("session")
 if not sel:

@@ -69,3 +69,10 @@ def audio_src(rel: str):
         return url
     path = store.local_path(rel)
     return str(path) if path else rel
+
+
+def page_setup(page_title: str, page_icon: str, layout: str = "wide") -> None:
+    """set_page_config + control de acceso. Debe ser lo PRIMERO que ejecuta cada página."""
+    st.set_page_config(page_title=page_title, page_icon=page_icon, layout=layout)
+    from .auth import guard
+    guard()

@@ -8,9 +8,9 @@ from ielts import audit, db, progress
 from ielts.config import load_llm_config
 from ielts.curriculum import load_curriculum
 from ielts.llm.usage import DbUsage, usage_summary
-from ielts.ui import get_conn, today
+from ielts.ui import get_conn, page_setup, today
 
-st.set_page_config(page_title="Progreso · IELTS Trainer", page_icon="📈", layout="wide")
+page_setup("Progreso · IELTS Trainer", "📈")
 st.title("📈 Progreso")
 conn, cur, now = get_conn(), load_curriculum(), today()
 st.caption("Todas las bandas son **bandas estimadas (aproximadas)** del modelo local: úsalas para ver la tendencia, no como veredicto.")

@@ -3,9 +3,9 @@ import streamlit as st
 
 from ielts.ingest import review
 from ielts.ingest.schema import list_tests, save_test
-from ielts.ui import audio_format, audio_src
+from ielts.ui import audio_format, audio_src, page_setup
 
-st.set_page_config(page_title="Verificar claves · IELTS Trainer", page_icon="🔑", layout="wide")
+page_setup("Verificar claves · IELTS Trainer", "🔑")
 st.title("🔑 Verificar claves")
 st.caption("Una clave mal leída arruina la evaluación. Compara cada tabla con la imagen del PDF y corrige lo necesario. "
            "Solo los tests marcados como verificados se usan en Reading y Listening.")

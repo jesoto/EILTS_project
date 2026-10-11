@@ -4,9 +4,9 @@ import streamlit as st
 from ielts.calendar import effective_week
 from ielts.curriculum import load_curriculum
 from ielts.modules import ui_vocab
-from ielts.ui import today
+from ielts.ui import page_setup, today
 
-st.set_page_config(page_title="Vocabulario · IELTS Trainer", page_icon="🃏", layout="wide")
+page_setup("Vocabulario · IELTS Trainer", "🃏")
 st.title("🃏 Vocabulario (SRS)")
 cur, now = load_curriculum(), today()
 week = effective_week(now, cur)

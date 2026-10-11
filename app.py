@@ -5,9 +5,9 @@ from ielts import audit, db, progress
 from ielts.config import load_llm_config
 from ielts.calendar import Mode, day_info, days_to_exam, effective_week
 from ielts.curriculum import WEEKDAYS, load_curriculum
-from ielts.ui import get_conn, plan_for, today
+from ielts.ui import get_conn, page_setup, plan_for, today
 
-st.set_page_config(page_title="IELTS Trainer", page_icon="📘", layout="wide")
+page_setup("IELTS Trainer", "📘")
 
 cur = load_curriculum()
 conn = get_conn()
