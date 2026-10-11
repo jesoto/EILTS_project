@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import datetime
 from pathlib import Path
 
@@ -81,6 +82,7 @@ class TestData(BaseModel):
     key_reading: list[KeyEntry] = Field(default_factory=list)
     verified: bool = False
     verified_at: str | None = None
+    key_images: list[str] = Field(default_factory=list)   # páginas de la clave pre-renderizadas (relativas a derived/)
     notes: list[str] = Field(default_factory=list)
 
     @property
@@ -97,25 +99,40 @@ class TestData(BaseModel):
         self.verified, self.verified_at = True, clock.timestamp()
 
 
+def derived_store(root: Path | None = None):
+    """Store de los tests extraídos: carpeta local (`DERIVED_DIR`) o GCS en modo cloud. `root` fuerza una carpeta."""
+    from ..storage import DirStore, make_store
+    return DirStore(root) if root else make_store("derived", DERIVED_DIR)
+
+
+def test_key(book: str, test: int) -> str:
+    return f"{book}/test{test}.json"
+
+
 def test_path(book: str, test: int, root: Path | None = None) -> Path:
+    """Ruta local del JSON (solo modo local)."""
     return (root or DERIVED_DIR) / book / f"test{test}.json"
 
 
-def save_test(t: TestData, root: Path | None = None) -> Path:
-    p = test_path(t.book, t.test, root)
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(t.model_dump_json(indent=1), encoding="utf-8")
-    return p
+def save_test(t: TestData, root: Path | None = None) -> str:
+    """Guarda el test; devuelve su clave dentro del store."""
+    key = test_key(t.book, t.test)
+    derived_store(root).write_bytes(key, t.model_dump_json(indent=1).encode("utf-8"), content_type="application/json")
+    return key
 
 
 def load_test(book: str, test: int, root: Path | None = None) -> TestData | None:
-    p = test_path(book, test, root)
-    return TestData.model_validate_json(p.read_text(encoding="utf-8")) if p.exists() else None
+    store = derived_store(root)
+    key = test_key(book, test)
+    if not store.exists(key):
+        return None
+    return TestData.model_validate_json(store.read_text(key))
 
 
 def list_tests(root: Path | None = None) -> list[TestData]:
-    base = root or DERIVED_DIR
+    store = derived_store(root)
     out = []
-    for p in sorted(base.glob("*/test*.json")) if base.exists() else []:
-        out.append(TestData.model_validate(json.loads(p.read_text(encoding="utf-8"))))
+    for key in store.list(""):
+        if re.fullmatch(r"[^/]+/test\d+\.json", key):
+            out.append(TestData.model_validate(json.loads(store.read_text(key))))
     return out

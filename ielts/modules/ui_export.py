@@ -61,9 +61,21 @@ def _doubts(ctx) -> bool:
     c1.download_button("⬇ Markdown", md, f"dudas_semana{week}.md", "text/markdown", key="dx_md")
     c2.download_button("⬇ PDF", export.html_to_pdf(export.doubts_html(week, texts, session)), f"dudas_semana{week}.pdf",
                        "application/pdf", key="dx_pdf")
-    if session is not None and session["audio_path"] and Path(session["audio_path"]).exists():
-        c3.download_button("⬇ Grabación (wav)", Path(session["audio_path"]).read_bytes(),
-                           Path(session["audio_path"]).name, "audio/wav", key="dx_wav")
+    wav = _recording(session)
+    if wav is not None:
+        c3.download_button("⬇ Grabación (wav)", wav[1], wav[0], "audio/wav", key="dx_wav")
     elif session is None:
         st.caption("Aún no hay monólogo de Speaking: grábalo en el bloque anterior para incluir la transcripción.")
     return True
+
+
+def _recording(session):
+    """(nombre, bytes) de la grabación del monólogo, o None si no existe (sirve también con rutas antiguas absolutas)."""
+    if session is None or not session["audio_path"]:
+        return None
+    from ..storage import recordings_store
+    name = Path(str(session["audio_path"]).replace("\\", "/")).name
+    try:
+        return name, recordings_store().read_bytes(name)
+    except FileNotFoundError:
+        return None

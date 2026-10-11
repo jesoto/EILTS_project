@@ -336,6 +336,13 @@ def parse_book(pdf_path: Path, book: str, book_title: str, audio_map: dict[tuple
                 doc[pg - 1].get_pixmap(dpi=130).save(str(img))
                 wt.image = f"{book}/images/{img.name}"
             td.writing.append(wt)
+        # ---- Imágenes de las páginas de clave (la página «Verificar claves» las muestra sin necesitar el PDF)
+        if render_images:
+            for pg in td.key_pages:
+                img = (out_root or DERIVED_DIR) / book / "images" / f"test{n}_key_p{pg}.png"
+                img.parent.mkdir(parents=True, exist_ok=True)
+                doc[pg - 1].get_pixmap(dpi=85).save(str(img))
+                td.key_images.append(f"{book}/images/{img.name}")
         # ---- Claves
         td.key_listening = parse_key_block(key_pages_text.get((n, "listening"), []))
         td.key_reading = parse_key_block(key_pages_text.get((n, "reading"), []))

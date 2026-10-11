@@ -23,8 +23,6 @@ from .. import clock
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 CONTENT_PATH = ROOT / "data" / "speaking_content.yaml"
-RECORDINGS_DIR = ROOT / "data" / "recordings"      # ignorado por git
-RESOURCES_DIR = ROOT / "resources"
 PART_LABEL = {"p2": "Speaking Part 2 (long turn)", "p13": "Speaking Parts 1 and 3"}
 BANNER = "banda estimada (aproximada)"
 
@@ -99,10 +97,11 @@ def save_session(conn: sqlite3.Connection, week: int, part: str, prompt: str, tr
 
 
 def save_recording(audio: bytes, week: int, part: str) -> str:
-    RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
-    path = RECORDINGS_DIR / f"w{week}_{part}_{clock.now():%Y%m%d_%H%M%S}.wav"
-    path.write_bytes(audio)
-    return str(path)
+    """Guarda la grabación (carpeta local o bucket) y devuelve su clave (nombre de archivo)."""
+    from ..storage import recordings_store
+    name = f"w{week}_{part}_{clock.now():%Y%m%d_%H%M%S}.wav"
+    recordings_store().write_bytes(name, audio, content_type="audio/wav")
+    return name
 
 
 def latest_session(conn: sqlite3.Connection, part: str | None = None) -> sqlite3.Row | None:
@@ -113,15 +112,12 @@ def latest_session(conn: sqlite3.Connection, part: str | None = None) -> sqlite3
     return conn.execute(q + " ORDER BY id DESC LIMIT 1", args).fetchone()
 
 
-# ---- shadowing ----
-def list_shadowing_audios(resources: Path | None = None) -> list[Path]:
-    """mp3 de Listening de los libros Cambridge (solo lectura local)."""
-    root = resources or RESOURCES_DIR
-    if not root.exists():
-        return []
-    files = [p for p in root.rglob("*.mp3") if "cambr" in str(p.relative_to(root)).lower()
-             and "grammar" not in str(p.relative_to(root)).lower()]
-    return sorted(files)
+# ---- shadowing
+def list_shadowing_audios() -> list[str]:
+    """Claves (en resources/) de los mp3 de Listening de los libros Cambridge: solo lectura."""
+    from ..storage import resources_store
+    return [k for k in resources_store().list("") if k.lower().endswith(".mp3")
+            and "cambr" in k.lower() and "grammar" not in k.lower()]
 
 
 def shadowing_compare(reference: str, spoken: str) -> dict:

@@ -5,7 +5,6 @@ from pathlib import Path
 
 from .schema import KeyEntry, TestData
 
-RESOURCES = Path(__file__).resolve().parent.parent.parent / "resources"
 SEP = " | "
 
 
@@ -60,20 +59,30 @@ def check(td: TestData) -> list[str]:
     return notes
 
 
-def find_pdf(name: str) -> Path | None:
-    if not name:
-        return None
-    return next(iter(RESOURCES.rglob(name)), None) if RESOURCES.exists() else None
-
-
 def render_page(pdf: Path, page_number: int, dpi: int = 85) -> bytes:
+    """Renderiza una página de un PDF local (solo ingesta)."""
     import pymupdf
     with pymupdf.open(str(pdf)) as doc:
         return doc[page_number - 1].get_pixmap(dpi=dpi).tobytes("png")
 
 
+def key_page_images(td: TestData) -> list[tuple[str, bytes]]:
+    """Imágenes de las páginas de clave guardadas en la ingesta: [(clave, png)]. Vacío si faltan."""
+    from .schema import derived_store
+    store = derived_store()
+    out = []
+    for key in td.key_images:
+        try:
+            out.append((key, store.read_bytes(key)))
+        except FileNotFoundError:
+            continue
+    return out
+
+
 def candidate_audios(td: TestData) -> list[str]:
-    """mp3 del mismo libro (para reasignar manualmente un audio)."""
-    folder = next((p.parent for p in RESOURCES.rglob("*.pdf") if p.name == td.source_pdf), None)
-    root = folder if folder else RESOURCES
-    return sorted(str(p.relative_to(RESOURCES)).replace("\\", "/") for p in root.rglob("*.mp3"))
+    """mp3 del mismo libro (para reasignar manualmente un audio): carpeta de los audios ya asignados, o todos."""
+    from ..storage import resources_store
+    keys = [k for k in resources_store().list("") if k.lower().endswith(".mp3")]
+    folders = {p.audio.rsplit("/", 1)[0] for p in td.listening if p.audio and "/" in p.audio}
+    near = [k for k in keys if any(k.startswith(f + "/") for f in folders)]
+    return sorted(near or keys)

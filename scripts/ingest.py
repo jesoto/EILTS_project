@@ -54,8 +54,8 @@ def main() -> None:
             if old and old.verified and not args.force:
                 print(f"{t.test_id}: ya VERIFICADO, no se sobrescribe (usa --force)")
                 continue
-            path = save_test(t)
-            print(f"{t.test_id}: guardado en {path.relative_to(DERIVED_DIR.parent.parent)}")
+            saved = save_test(t)
+            print(f"{t.test_id}: guardado ({saved}, {len(t.key_images)} imágenes de clave)")
             for n in t.notes:
                 print("   AVISO:", n)
 

@@ -3,7 +3,7 @@ import streamlit as st
 
 from ielts.ingest import review
 from ielts.ingest.schema import list_tests, save_test
-from ielts.ui import audio_format
+from ielts.ui import audio_format, audio_src
 
 st.set_page_config(page_title="Verificar claves · IELTS Trainer", page_icon="🔑", layout="wide")
 st.title("🔑 Verificar claves")
@@ -32,7 +32,7 @@ if notes:
 else:
     st.success("Sin avisos automáticos. Aun así, compara con el PDF.")
 
-pdf = review.find_pdf(td.source_pdf)
+key_images = review.key_page_images(td)
 tab_l, tab_r, tab_q, tab_a, tab_w = st.tabs(["Listening", "Reading", "Tipos de pregunta", "Audios", "Writing"])
 edited: dict[str, list[dict]] = {}
 for tab, skill in ((tab_l, "listening"), (tab_r, "reading")):
@@ -47,12 +47,11 @@ for tab, skill in ((tab_l, "listening"), (tab_r, "reading")):
                                "answer": st.column_config.TextColumn("Respuesta(s) aceptada(s), separadas por |"),
                                "any_order": st.column_config.CheckboxColumn("Cualquier orden (pareja)")})
         with right:
-            if pdf and td.key_pages:
-                pages = td.key_pages
-                for pg in pages:
-                    st.image(review.render_page(pdf, pg), caption=f"PDF · página {pg}")
+            if key_images:
+                for key, png in key_images:
+                    st.image(png, caption=f"PDF · {key.rsplit('/', 1)[-1]}")
             else:
-                st.caption("No se encontró el PDF original en resources/.")
+                st.caption("No hay imágenes de la clave: vuelve a ejecutar `scripts/ingest.py` con el PDF en resources/.")
 
 with tab_q:
     st.caption("Cómo se contesta cada grupo de preguntas en la app (texto libre, lista de opciones…).")
@@ -71,7 +70,7 @@ with tab_a:
         choice = st.selectbox(f"Parte {p.part}", opts, index=idx, key=f"au_{tid}_{p.part}")
         p.audio = None if choice == "(sin audio)" else choice
         if p.audio:
-            st.audio(str(review.RESOURCES / p.audio), format=audio_format(p.audio))
+            st.audio(audio_src(p.audio), format=audio_format(p.audio))
         else:
             st.warning(f"La Parte {p.part} no tiene audio: no se podrá practicar esa parte.")
 

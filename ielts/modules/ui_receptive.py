@@ -2,18 +2,17 @@
 from __future__ import annotations
 
 import time
-from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
 
 from ..curriculum import load_curriculum
 from ..ingest.schema import Group, TestData
-from ..ui import audio_format, get_conn, get_transcriber
+from ..storage import resources_store
+from ..ui import audio_format, audio_src, get_conn, get_transcriber
 from . import dictation
 from . import receptive as rc
 
-RESOURCES = Path(__file__).resolve().parent.parent.parent / "resources"
 MODE = {"reading": "one", "reading_sections": "sections", "reading_full": "full", "sim_reading": "full",
         "dx_reading": "full", "listening": "one", "listening_sections": "sections", "listening_full": "full",
         "dx_listening": "full"}
@@ -83,9 +82,9 @@ def _plan(skill: str, mode: str, ctx, tests: list[TestData], conn) -> list[tuple
 
 
 # ------------------------------------------------------------------ componentes
-def audio_with_speed(path, speed: float, key: str) -> None:
+def audio_with_speed(rel: str, speed: float, key: str) -> None:
     """st.audio no tiene control de velocidad: se aplica playbackRate al <audio> desde un iframe del mismo origen."""
-    st.audio(str(path), format=audio_format(path))
+    st.audio(audio_src(rel), format=audio_format(rel))
     components.html(
         f"<script>const s=()=>{{window.parent.document.querySelectorAll('audio').forEach("
         f"a=>{{if(!a.closest('[data-testid=stExpander]')){{a.playbackRate={speed};a.preservesPitch=true;}}}});}};s();setInterval(s,800);</script>", height=0)
@@ -177,7 +176,7 @@ def _run(skill: str, mode: str, block, ctx, key0: str) -> bool:
                             answers[(u.td.test_id, q)] = v
         else:
             lp = u.td.listening[u.n - 1]
-            audio_with_speed(RESOURCES / lp.audio, speed, key)
+            audio_with_speed(lp.audio, speed, key)
             for g in groups:
                 for q, v in _group_block(g, key, u.td.test_id).items():
                     answers[(u.td.test_id, q)] = v
@@ -279,12 +278,12 @@ def _dictation(u: rc.Unit, key: str, ctx) -> None:
         c1, c2 = st.columns(2)
         start = c1.number_input("Inicio (s)", min_value=0, value=60, step=10, key=f"{dkey}_s")
         length = c2.slider("Duración (s)", 30, 70, 60, key=f"{dkey}_l")
-        st.audio(str(RESOURCES / lp.audio), format=audio_format(lp.audio), start_time=int(start), end_time=int(start + length))
+        st.audio(audio_src(lp.audio), format=audio_format(lp.audio), start_time=int(start), end_time=int(start + length))
         typed = st.text_area("Lo que oigo", key=f"{dkey}_t", height=140)
         if st.button("Comparar con el libro", key=f"{dkey}_c"):
             try:
                 with st.spinner("Localizando el fragmento en la transcripción…"):
-                    asr = get_transcriber().transcribe(RESOURCES / lp.audio, start=float(start), end=float(start + length))
+                    asr = get_transcriber().transcribe(resources_store().read_bytes(lp.audio), start=float(start), end=float(start + length))
                 ref = dictation.locate(asr.text, lp.transcript)
             except Exception as e:  # noqa: BLE001
                 st.error(f"No se pudo transcribir el fragmento: {e}")

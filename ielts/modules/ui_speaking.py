@@ -9,7 +9,8 @@ from ..curriculum import load_curriculum
 from ..llm.base import LLMError
 from ..llm.schemas import SpeakingEvaluation
 from ..speaking_metrics import SpeakingMetrics
-from ..ui import audio_format, fmt_mmss, get_conn, get_provider, get_transcriber
+from ..storage import resources_store
+from ..ui import audio_format, audio_src, fmt_mmss, get_conn, get_provider, get_transcriber
 from . import speaking as sp
 
 PREP_SECONDS = 60
@@ -166,21 +167,20 @@ def _render_shadowing(ctx) -> bool:
     if not files:
         st.warning("No encontré audios de Cambridge en resources/. Añádelos para practicar shadowing.")
         return True
-    names = [str(f.relative_to(sp.RESOURCES_DIR)) for f in files]
+    names = files
     default = next((i for i, n in enumerate(names) if "T1 AUDIO 4" in n), 0)
     choice = st.selectbox("Audio", names, index=default, key=f"{key}_file")
-    path = sp.RESOURCES_DIR / choice
     c1, c2 = st.columns(2)
     start = c1.number_input("Inicio (s)", min_value=0, value=0, step=5, key=f"{key}_start")
     length = c2.slider("Duración del fragmento (s)", 10, 40, 20, key=f"{key}_len")
-    st.audio(str(path), format=audio_format(path), start_time=int(start), end_time=int(start + length))
+    st.audio(audio_src(choice), format=audio_format(choice), start_time=int(start), end_time=int(start + length))
     st.caption("1) Escucha. 2) Pulsa «Preparar referencia». 3) Escucha otra vez repitiendo en voz alta justo después de cada frase "
                "(shadowing). 4) Graba tu versión.")
 
     if st.button("Preparar referencia (transcribe el fragmento)", key=f"{key}_ref"):
         try:
             with st.spinner("Transcribiendo el fragmento…"):
-                s["ref"] = get_transcriber().transcribe(path, start=float(start), end=float(start + length)).text
+                s["ref"] = get_transcriber().transcribe(resources_store().read_bytes(choice), start=float(start), end=float(start + length)).text
         except Exception as e:  # noqa: BLE001
             st.error(f"No se pudo transcribir: {e}")
     if s.get("ref"):

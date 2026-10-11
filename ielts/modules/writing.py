@@ -142,8 +142,8 @@ def book_t1_tasks(task_types: list[str], conn: sqlite3.Connection | None = None,
         for wt in t.writing:
             if wt.task != 1 or not wt.image or wt.prompt in used or wt.task_type not in task_types:
                 continue
-            img = schema.DERIVED_DIR / wt.image
-            if img.exists():
-                out.append({"prompt": wt.prompt, "task_type": wt.task_type, "png": img.read_bytes(),
+            store = schema.derived_store()
+            if store.exists(wt.image):
+                out.append({"prompt": wt.prompt, "task_type": wt.task_type, "png": store.read_bytes(wt.image),
                             "source": f"{t.book_title} · Test {t.test}"})
     return out
