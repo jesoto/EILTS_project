@@ -20,6 +20,13 @@ CREATE TABLE IF NOT EXISTS block_log (
     done_at TEXT NOT NULL,
     PRIMARY KEY (week, weekday, block_id)
 );
+CREATE TABLE IF NOT EXISTS llm_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ts TEXT NOT NULL,
+    model TEXT NOT NULL,
+    prompt_tokens INTEGER NOT NULL DEFAULT 0,
+    completion_tokens INTEGER NOT NULL DEFAULT 0
+);
 CREATE TABLE IF NOT EXISTS skill_level (
     skill TEXT PRIMARY KEY,
     level INTEGER NOT NULL CHECK (level BETWEEN 1 AND 10)
@@ -143,12 +150,12 @@ CREATE TABLE IF NOT EXISTS writing_submission (
 """
 
 
-def connect(path: str | Path | None = None) -> sqlite3.Connection:
+def connect(path: str | Path | None = None, factory: type | None = None) -> sqlite3.Connection:
     p = Path(path or os.environ.get("IELTS_DB") or DB_PATH)
     if str(p) != ":memory:":
         p.parent.mkdir(parents=True, exist_ok=True)
     # Streamlit ejecuta cada rerun en un hilo distinto y la conexión se cachea.
-    conn = sqlite3.connect(str(p), check_same_thread=False)
+    conn = sqlite3.connect(str(p), check_same_thread=False, **({'factory': factory} if factory else {}))
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
     conn.executemany("INSERT OR IGNORE INTO skill_level(skill, level) VALUES (?, ?)",

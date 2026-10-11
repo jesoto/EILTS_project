@@ -18,13 +18,22 @@ def today() -> date:
 
 @st.cache_resource
 def get_conn():
+    """Base de datos: SQLite local, o en modo cloud SQLite sincronizado con Google Cloud Storage."""
+    from .config import load_app_config
+    if load_app_config().is_cloud:
+        from . import dbsync
+        return dbsync.open_cloud_db()
     return db.connect()
 
 
 @st.cache_resource
 def get_provider():
     from .llm.client import get_provider as _get
-    return _get()
+    from .llm.usage import DbUsage
+    provider = _get()
+    if hasattr(provider, "usage"):               # OpenAI: el gasto se guarda en la base de datos
+        provider.usage = DbUsage(get_conn())
+    return provider
 
 
 @st.cache_resource

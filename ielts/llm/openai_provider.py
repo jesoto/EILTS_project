@@ -1,27 +1,24 @@
-"""Proveedor de OpenAI (Chat Completions, modo JSON). La clave se lee de OPENAI_API_KEY (.env)."""
+"""Proveedor de OpenAI (Chat Completions, modo JSON). La clave se lee de OPENAI_API_KEY (.env o secrets)."""
 from __future__ import annotations
 
 import json
 import os
 import time
-from datetime import datetime
 from pathlib import Path
 
 import httpx
 
-from ..config import ROOT, LLMConfig, load_llm_config
+from ..config import LLMConfig, load_llm_config
 from .base import LLMError, LLMProvider
-from .. import clock
-
-USAGE_PATH = ROOT / "data" / "llm_usage.jsonl"       # ignorado por git
+from .usage import USAGE_PATH, FileUsage, UsageTracker, calls_today
 
 
 class OpenAIProvider(LLMProvider):
     def __init__(self, config: LLMConfig | None = None, *, transport: httpx.BaseTransport | None = None,
-                 usage_path: Path | None = None, sleep=time.sleep):
+                 usage_path: Path | None = None, usage: UsageTracker | None = None, sleep=time.sleep):
         self.cfg = config or load_llm_config()
         self._transport = transport          # inyectable en tests
-        self._usage_path = usage_path or USAGE_PATH
+        self.usage = usage or FileUsage(usage_path or USAGE_PATH)
         self._sleep = sleep
 
     # -- utilidades
@@ -36,18 +33,19 @@ class OpenAIProvider(LLMProvider):
         return text.replace(key, "***") if key else text
 
     def _log_usage(self, usage: dict) -> None:
-        try:
-            self._usage_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(self._usage_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps({"ts": clock.timestamp(), "model": self.cfg.openai_model,
-                                    "prompt_tokens": usage.get("prompt_tokens", 0),
-                                    "completion_tokens": usage.get("completion_tokens", 0)}) + "\n")
-        except OSError:
-            pass    # el registro de gasto nunca debe romper una evaluación
+        self.usage.record(self.cfg.openai_model, int(usage.get("prompt_tokens", 0)),
+                          int(usage.get("completion_tokens", 0)))
+
+    def _check_daily_cap(self) -> None:
+        cap = self.cfg.max_calls_per_day
+        if cap and calls_today(self.usage) >= cap:
+            raise LLMError(f"Límite diario de llamadas al LLM alcanzado ({cap}). Se reinicia mañana; "
+                           "puedes subirlo en config.toml (max_calls_per_day).")
 
     # -- API
     def chat(self, system, user, *, temperature, json_schema=None, seed=None) -> str:
         key = self._key()
+        self._check_daily_cap()
         if json_schema is not None:
             system = (f"{system}\n\nRespond with ONE JSON object that conforms to this JSON Schema "
                       f"(no extra text):\n{json.dumps(json_schema)}")

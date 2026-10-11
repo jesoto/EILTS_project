@@ -116,6 +116,7 @@ class LLMConfig:
     openai_key_env: str = "OPENAI_API_KEY"
     price_in_per_m: float = 0.0         # USD por millón de tokens de entrada (para estimar el gasto)
     price_out_per_m: float = 0.0        # USD por millón de tokens de salida
+    max_calls_per_day: int = 0          # tope diario de llamadas al LLM (0 = sin tope); protege tu crédito
     num_ctx: int = 8192
     timeout_s: float = 300
     max_retries: int = 2
