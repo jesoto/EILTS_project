@@ -19,6 +19,7 @@ from ..llm.schemas import SpeakingEvaluation
 from ..scoring import round_band
 from ..speaking_metrics import SpeakingMetrics, compare_transcripts, compute_metrics
 from ..stt import Transcriber, Transcript
+from .. import clock
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 CONTENT_PATH = ROOT / "data" / "speaking_content.yaml"
@@ -87,7 +88,7 @@ def save_session(conn: sqlite3.Connection, week: int, part: str, prompt: str, tr
     cur = conn.execute(
         "INSERT INTO speaking_session(date, week, part, prompt, transcript, metrics, evaluation, audio_path) "
         "VALUES (?,?,?,?,?,?,?,?)",
-        (datetime.now().isoformat(timespec="seconds"), week, part, prompt, transcript,
+        (clock.timestamp(), week, part, prompt, transcript,
          json.dumps(dataclasses.asdict(metrics), ensure_ascii=False), ev.model_dump_json() if ev else None, audio_path))
     conn.commit()
     if ev:
@@ -99,7 +100,7 @@ def save_session(conn: sqlite3.Connection, week: int, part: str, prompt: str, tr
 
 def save_recording(audio: bytes, week: int, part: str) -> str:
     RECORDINGS_DIR.mkdir(parents=True, exist_ok=True)
-    path = RECORDINGS_DIR / f"w{week}_{part}_{datetime.now():%Y%m%d_%H%M%S}.wav"
+    path = RECORDINGS_DIR / f"w{week}_{part}_{clock.now():%Y%m%d_%H%M%S}.wav"
     path.write_bytes(audio)
     return str(path)
 

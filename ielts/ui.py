@@ -8,12 +8,12 @@ import streamlit as st
 
 from . import db
 from .curriculum import Block, load_curriculum
+from . import clock
 
 
 def today() -> date:
-    """Hoy; IELTS_TODAY=YYYY-MM-DD permite simular otra fecha al probar."""
-    override = os.environ.get("IELTS_TODAY")
-    return date.fromisoformat(override) if override else date.today()
+    """Hoy en la zona horaria configurada (IELTS_TODAY=YYYY-MM-DD simula otra fecha)."""
+    return clock.today()
 
 
 @st.cache_resource

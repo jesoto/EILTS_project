@@ -11,6 +11,7 @@ import httpx
 
 from ..config import ROOT, LLMConfig, load_llm_config
 from .base import LLMError, LLMProvider
+from .. import clock
 
 USAGE_PATH = ROOT / "data" / "llm_usage.jsonl"       # ignorado por git
 
@@ -38,7 +39,7 @@ class OpenAIProvider(LLMProvider):
         try:
             self._usage_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self._usage_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps({"ts": datetime.now().isoformat(timespec="seconds"), "model": self.cfg.openai_model,
+                f.write(json.dumps({"ts": clock.timestamp(), "model": self.cfg.openai_model,
                                     "prompt_tokens": usage.get("prompt_tokens", 0),
                                     "completion_tokens": usage.get("completion_tokens", 0)}) + "\n")
         except OSError:

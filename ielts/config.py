@@ -29,6 +29,83 @@ def load_env_file(path: Path | None = None) -> None:
             os.environ.setdefault(key, value)
 
 
+def bridge_streamlit_secrets() -> None:
+    """Copia los *secrets* planos de Streamlit (texto) a os.environ, sin pisar variables ya definidas."""
+    try:
+        import streamlit as st
+        secrets = st.secrets
+        keys = list(secrets.keys())
+    except Exception:  # noqa: BLE001 — sin secrets.toml o fuera de Streamlit
+        return
+    for k in keys:
+        try:
+            v = secrets[k]
+        except Exception:  # noqa: BLE001
+            continue
+        if isinstance(v, str):
+            os.environ.setdefault(k, v)
+
+
+def load_env() -> None:
+    """.env (local) + secrets de Streamlit (cloud)."""
+    load_env_file()
+    bridge_streamlit_secrets()
+
+
+def secret(name: str, default: str | None = None) -> str | None:
+    """Valor de configuración sensible: variable de entorno o secret de Streamlit (`a.b` = tabla anidada)."""
+    load_env()
+    if os.environ.get(name):
+        return os.environ[name]
+    try:
+        import streamlit as st
+        node = st.secrets
+        for part in name.split("."):
+            node = node[part]
+        return str(node) if not hasattr(node, "keys") else default
+    except Exception:  # noqa: BLE001
+        return default
+
+
+def secret_section(name: str) -> dict:
+    """Tabla anidada de los secrets (p. ej. `gcp_service_account`) como dict normal."""
+    try:
+        import streamlit as st
+        return {k: v for k, v in dict(st.secrets[name]).items()}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _toml_section(name: str, path: Path | None = None) -> dict:
+    p = path or CONFIG_PATH
+    if not p.exists():
+        return {}
+    with open(p, "rb") as f:
+        return tomllib.load(f).get(name, {})
+
+
+@dataclass(frozen=True)
+class AppConfig:
+    mode: str = "local"               # local | cloud
+    timezone: str = ""                # p. ej. America/Lima; vacío = zona del sistema
+    exam_date: str = ""               # YYYY-MM-DD; vacío = fechas de data/curriculum.yaml
+    free_days: tuple[str, ...] = ()   # días libres extra (YYYY-MM-DD) cuando se usa exam_date
+
+    @property
+    def is_cloud(self) -> bool:
+        return self.mode == "cloud"
+
+
+def load_app_config(path: Path | None = None) -> AppConfig:
+    load_env()
+    app, plan = _toml_section("app", path), _toml_section("plan", path)
+    cfg = AppConfig(mode=str(app.get("mode", "local")), timezone=str(app.get("timezone", "")),
+                    exam_date=str(plan.get("exam_date", "")), free_days=tuple(plan.get("free_days", ())))
+    env = {"mode": "IELTS_MODE", "timezone": "IELTS_TZ", "exam_date": "IELTS_EXAM_DATE"}
+    over = {k: os.environ[v] for k, v in env.items() if os.environ.get(v)}
+    return AppConfig(**{**cfg.__dict__, **over}) if over else cfg
+
+
 @dataclass(frozen=True)
 class LLMConfig:
     provider: str = "ollama"            # ollama | openai
@@ -51,7 +128,7 @@ class LLMConfig:
 
 
 def load_llm_config(path: Path | None = None) -> LLMConfig:
-    load_env_file()
+    load_env()
     data: dict = {}
     p = path or CONFIG_PATH
     if p.exists():
@@ -68,14 +145,17 @@ def load_llm_config(path: Path | None = None) -> LLMConfig:
 
 @dataclass(frozen=True)
 class STTConfig:
+    provider: str = "local"           # local (faster-whisper) | openai (API, para cloud)
     model: str = "small"
     device: str = "cpu"
     compute_type: str = "int8"
     language: str = "en"
     initial_prompt: str = ""
+    openai_model: str = "whisper-1"   # el único de la API que devuelve timestamps por palabra
 
 
 def load_stt_config(path: Path | None = None) -> STTConfig:
+    load_env()
     data: dict = {}
     p = path or CONFIG_PATH
     if p.exists():
@@ -84,4 +164,6 @@ def load_stt_config(path: Path | None = None) -> STTConfig:
     cfg = STTConfig(**{k: v for k, v in data.items() if k in STTConfig.__dataclass_fields__})
     if os.environ.get("IELTS_STT_MODEL"):
         cfg = STTConfig(**{**cfg.__dict__, "model": os.environ["IELTS_STT_MODEL"]})
+    if os.environ.get("IELTS_STT_PROVIDER"):
+        cfg = STTConfig(**{**cfg.__dict__, "provider": os.environ["IELTS_STT_PROVIDER"]})
     return cfg

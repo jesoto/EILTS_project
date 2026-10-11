@@ -13,6 +13,7 @@ from .config import LLMConfig, load_llm_config
 from .llm.base import LLMProvider
 from .llm.client import generate_json, load_prompt
 from .llm.schemas import VocabCardBatch
+from . import clock
 
 SEED_PATH = Path(__file__).resolve().parent.parent / "data" / "vocab_seed.yaml"
 NEW_PER_DAY = 8
@@ -39,7 +40,7 @@ def sm2(ease: float, interval: int, reps: int, quality: int) -> tuple[float, int
 
 def review_card(conn: sqlite3.Connection, card_id: int, quality: int, today: date | None = None,
                 user_sentence: str | None = None) -> sqlite3.Row:
-    today = today or date.today()
+    today = today or clock.today()
     row = conn.execute("SELECT * FROM card WHERE id=?", (card_id,)).fetchone()
     ease, interval, reps = sm2(row["ease"], row["interval"], row["reps"], quality)
     due = today + timedelta(days=interval)
@@ -61,7 +62,7 @@ def _new_today(conn: sqlite3.Connection, today: date) -> int:
 
 def due_cards(conn: sqlite3.Connection, today: date | None = None, limit: int = 50) -> list[sqlite3.Row]:
     """Repasos vencidos primero; tarjetas nuevas limitadas a NEW_PER_DAY por día."""
-    today = today or date.today()
+    today = today or clock.today()
     iso = today.isoformat()
     reviews = conn.execute(
         """SELECT * FROM card WHERE status='ready' AND due<=?
@@ -86,7 +87,7 @@ def unseen_ready(conn: sqlite3.Connection) -> int:
 
 
 def stats(conn: sqlite3.Connection, today: date | None = None) -> dict:
-    today = today or date.today()
+    today = today or clock.today()
     due = due_cards(conn, today)
     q = lambda sql: conn.execute(sql).fetchone()["c"]  # noqa: E731
     return {"due": len(due), "total": q("SELECT COUNT(*) c FROM card WHERE status='ready'"),
@@ -119,7 +120,7 @@ def seed_words_for(theme: str, phase: int) -> dict[str, list[str]]:
 
 def add_pending(conn: sqlite3.Connection, words: list[str], source: str, theme: str = "",
                 today: date | None = None) -> int:
-    today = (today or date.today()).isoformat()
+    today = (today or clock.today()).isoformat()
     n = 0
     for w in words:
         word = " ".join(w.lower().split())

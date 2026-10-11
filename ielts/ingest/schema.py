@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field
+from .. import clock
 
 DERIVED_DIR = Path(os.environ.get("IELTS_DERIVED") or Path(__file__).resolve().parent.parent.parent / "data" / "derived")
 INPUT_KINDS = ("text", "choice", "tfng", "ynng", "headings")
@@ -93,7 +94,7 @@ class TestData(BaseModel):
         return {q: e for e in self.key(skill) for q in e.qnums}
 
     def mark_verified(self) -> None:
-        self.verified, self.verified_at = True, datetime.now().isoformat(timespec="seconds")
+        self.verified, self.verified_at = True, clock.timestamp()
 
 
 def test_path(book: str, test: int, root: Path | None = None) -> Path:

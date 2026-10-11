@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from datetime import date
+from . import clock
 
 LOW_ENERGY = 2      # energía ≤ 2 → baja
 HIGH_ANXIETY = 4    # ansiedad ≥ 4 → alta
@@ -20,7 +21,7 @@ def save_audit(conn: sqlite3.Connection, week: int, *, measured: dict, where_los
            VALUES (?,?,?,?,?,?,?,?)
            ON CONFLICT(week) DO UPDATE SET date=excluded.date, measured=excluded.measured, where_lost=excluded.where_lost,
              why=excluded.why, change_goal=excluded.change_goal, energy=excluded.energy, anxiety=excluded.anxiety""",
-        (week, (today or date.today()).isoformat(), json.dumps(measured, ensure_ascii=False, default=str),
+        (week, (today or clock.today()).isoformat(), json.dumps(measured, ensure_ascii=False, default=str),
          where_lost, why, change_goal, energy, anxiety))
     conn.commit()
 
@@ -58,7 +59,7 @@ def add_doubt(conn: sqlite3.Connection, week: int, text: str, source: str = "man
     if not text:
         return False
     cur = conn.execute("INSERT OR IGNORE INTO doubt(date, week, text, source) VALUES (?,?,?,?)",
-                       ((today or date.today()).isoformat(), week, text, source))
+                       ((today or clock.today()).isoformat(), week, text, source))
     conn.commit()
     return cur.rowcount > 0
 

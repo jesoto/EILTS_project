@@ -18,6 +18,7 @@ from ..llm.client import generate_json, load_prompt
 from ..llm.schemas import RewriteEvaluation, WritingEvaluation
 from ..scoring import round_band
 from ..text import word_count
+from .. import clock
 
 PROMPTS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "writing_prompts.yaml"
 TASK_LABEL = {"t1": "Academic Writing Task 1", "t2": "Academic Writing Task 2"}
@@ -84,7 +85,7 @@ def save_submission(conn: sqlite3.Connection, week: int, task: str, task_type: s
                     text: str, ev: WritingEvaluation) -> int:
     cur = conn.execute(
         "INSERT INTO writing_submission(date, week, task, task_type, prompt, text, evaluation) VALUES (?,?,?,?,?,?,?)",
-        (datetime.now().isoformat(timespec="seconds"), week, task, task_type, prompt, text, ev.model_dump_json()))
+        (clock.timestamp(), week, task, task_type, prompt, text, ev.model_dump_json()))
     conn.commit()
     for e in ev.errores:
         db.log_error(conn, "writing", e.fragmento, e.correccion, e.categoria.value, e.explicacion_es)

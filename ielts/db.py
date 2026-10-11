@@ -5,6 +5,7 @@ import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from . import clock
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "ielts.db"
 SKILLS = ["grammar", "writing", "reading", "listening", "speaking", "vocab"]
@@ -159,7 +160,7 @@ def connect(path: str | Path | None = None) -> sqlite3.Connection:
 def mark_block_done(conn: sqlite3.Connection, week: int, weekday: str, block_id: str, seconds: int) -> None:
     conn.execute(
         "INSERT OR REPLACE INTO block_log(week, weekday, block_id, seconds, done_at) VALUES (?,?,?,?,?)",
-        (week, weekday, block_id, int(seconds), datetime.now().isoformat(timespec="seconds")),
+        (week, weekday, block_id, int(seconds), clock.timestamp()),
     )
     conn.commit()
 
@@ -191,10 +192,10 @@ def log_error(conn: sqlite3.Connection, module: str, fragment: str, correction: 
            VALUES (?,?,?,?,?,?)
            ON CONFLICT(module, fragment, correction, category)
            DO UPDATE SET count = count + 1, date = excluded.date""",
-        (datetime.now().date().isoformat(), module, fragment.strip(), correction.strip(), category, explanation),
+        (clock.now().date().isoformat(), module, fragment.strip(), correction.strip(), category, explanation),
     )
     conn.execute("INSERT INTO error_event(date, module, category) VALUES (?,?,?)",
-                 (datetime.now().date().isoformat(), module, category))
+                 (clock.now().date().isoformat(), module, category))
     if category in LEXICAL_CATEGORIES:
         queue_card_from_error(conn, fragment, correction, category, explanation)
     conn.commit()
@@ -209,7 +210,7 @@ def queue_card_from_error(conn: sqlite3.Connection, fragment: str, correction: s
     word = " ".join(correction.lower().split()).strip(" .,;:")
     if not word or len(word.split()) > 5:   # solo palabras/chunks, no oraciones enteras
         return
-    today = datetime.now().date().isoformat()
+    today = clock.now().date().isoformat()
     conn.execute(
         """INSERT OR IGNORE INTO card(word, status, source, context, due, created)
            VALUES (?, 'pending', 'error_log', ?, ?, ?)""",
@@ -233,7 +234,7 @@ def top_categories(conn: sqlite3.Connection, since: str | None = None, limit: in
 def record_attempt(conn: sqlite3.Connection, skill: str, score: float, detail: str = "") -> None:
     """score en 0..1. Ajusta el nivel con la ventana móvil de las últimas 5 sesiones."""
     conn.execute("INSERT INTO attempt(date, skill, score, detail) VALUES (?,?,?,?)",
-                 (datetime.now().isoformat(timespec="seconds"), skill, float(score), detail))
+                 (clock.timestamp(), skill, float(score), detail))
     conn.commit()
     adjust_level(conn, skill)
 
@@ -263,5 +264,5 @@ def exercise_seen(conn: sqlite3.Connection, h: str) -> bool:
 
 def remember_exercise(conn: sqlite3.Connection, h: str, kind: str, topic: str) -> None:
     conn.execute("INSERT OR IGNORE INTO generated_exercise(hash, kind, topic, created) VALUES (?,?,?,?)",
-                 (h, kind, topic, datetime.now().isoformat(timespec="seconds")))
+                 (h, kind, topic, clock.timestamp()))
     conn.commit()

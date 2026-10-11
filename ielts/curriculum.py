@@ -1,7 +1,7 @@
 """Carga y validación de data/curriculum.yaml (única fuente del plan)."""
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -103,7 +103,39 @@ class Curriculum(BaseModel):
         return [Block(**b) for b in self.diagnostic["blocks"]] + [self.srs_block]
 
 
-@lru_cache(maxsize=1)
+def derive_plan_dates(exam: date, free_days: tuple[date, ...] = ()) -> dict:
+    """Fechas del plan de 11 semanas a partir de la fecha de examen.
+
+    Inicio = lunes de 11 semanas antes de la semana del examen (examen 29-dic-2026 → inicio 12-oct-2026);
+    punto de control = domingo de la semana 6; día de descanso = víspera del examen.
+    """
+    exam_monday = exam - timedelta(days=exam.weekday())
+    start = exam_monday - timedelta(weeks=11)
+    return {"start_date": start, "exam_date": exam, "checkpoint_date": start + timedelta(days=41),
+            "rest_day": exam - timedelta(days=1), "free_days": list(free_days)}
+
+
+def _apply_exam_date(cur: Curriculum, exam: date, free_days: tuple[date, ...]) -> Curriculum:
+    dates = derive_plan_dates(exam, free_days)
+    phases = []
+    for ph in cur.phases:
+        first = dates["start_date"] + timedelta(weeks=ph.weeks[0] - 1)
+        last = dates["start_date"] + timedelta(weeks=ph.weeks[1]) - timedelta(days=1)
+        phases.append(ph.model_copy(update={"start": first, "end": last}))
+    return cur.model_copy(update={**dates, "phases": phases})
+
+
+@lru_cache(maxsize=8)
+def _load(path: str, exam_iso: str, free_days: tuple[str, ...]) -> Curriculum:
+    with open(path, encoding="utf-8") as f:
+        cur = Curriculum.model_validate(yaml.safe_load(f))
+    if exam_iso:
+        cur = _apply_exam_date(cur, date.fromisoformat(exam_iso), tuple(date.fromisoformat(d) for d in free_days))
+    return cur
+
+
 def load_curriculum(path: str | None = None) -> Curriculum:
-    with open(path or CURRICULUM_PATH, encoding="utf-8") as f:
-        return Curriculum.model_validate(yaml.safe_load(f))
+    """Currículo; si hay `exam_date` en config.toml/IELTS_EXAM_DATE, las fechas se derivan de ella."""
+    from .config import load_app_config
+    app = load_app_config()
+    return _load(str(path or CURRICULUM_PATH), app.exam_date, app.free_days)

@@ -11,6 +11,7 @@ from .. import db
 from ..ingest.schema import Group, KeyEntry, TestData, list_tests
 from ..scoring import listening_band, reading_band
 from ..text import normalize_answer
+from .. import clock
 
 READING_CAUSES = ["Sinónimo no reconocido", "Not Given vs False", "Falta de tiempo", "Vocabulario desconocido",
                   "Leí mal / descuido", "Adiviné"]
@@ -125,7 +126,7 @@ def record_attempt(conn: sqlite3.Connection, *, week: int, skill: str, td: TestD
     cur = conn.execute(
         "INSERT INTO receptive_attempt(date, week, skill, test_id, unit, raw, total, band, qtype, seconds) "
         "VALUES (?,?,?,?,?,?,?,?,?,?)",
-        (datetime.now().isoformat(timespec="seconds"), week, skill, td.test_id, unit, raw, len(results),
+        (clock.timestamp(), week, skill, td.test_id, unit, raw, len(results),
          band_for(skill, raw, len(results)), qtype, seconds))
     aid = cur.lastrowid
     spelling_ids = []
