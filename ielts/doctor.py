@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 import httpx
 
-from .config import load_app_config, load_llm_config, load_stt_config, secret, secret_section
+from .config import SECRETS_STATUS, load_app_config, load_llm_config, load_stt_config, on_streamlit_cloud, secret, secret_section
 from .ingest.books import book_status, load_books
 from .ingest.schema import list_tests
 from .storage import _local_roots
@@ -29,6 +29,21 @@ class Check:
 
 def _has_key() -> bool:
     return bool(secret(load_llm_config().openai_key_env))
+
+
+def check_secrets() -> list[Check]:
+    from .config import load_env
+    load_env()
+    st = SECRETS_STATUS
+    if st["state"] == "invalid":
+        return [Check("secrets", FAIL, "Los secrets de Streamlit no se pueden leer", f"Error: {st['error']}",
+                      "Revisa que el contenido de Settings → Secrets sea TOML válido y vuelve a guardar")]
+    if on_streamlit_cloud() and st["state"] != "loaded":
+        return [Check("secrets", FAIL, "Esta app está en Streamlit Cloud sin secrets",
+                      fix="Pega .streamlit/secrets.cloud.toml en Settings → Secrets, Save y Reboot")]
+    if st["state"] == "loaded":
+        return [Check("secrets", OK, f"Secrets de Streamlit cargados ({st['keys']} claves)")]
+    return []
 
 
 def check_mode() -> list[Check]:
@@ -158,7 +173,7 @@ def check_plan() -> list[Check]:
 
 def run_checks() -> list[Check]:
     checks: list[Check] = []
-    for fn in (check_mode, check_plan, check_llm, check_stt, check_storage_and_db, check_access, check_books):
+    for fn in (check_secrets, check_mode, check_plan, check_llm, check_stt, check_storage_and_db, check_access, check_books):
         try:
             checks += fn()
         except Exception as e:  # noqa: BLE001 — un diagnóstico nunca debe tumbar la página
@@ -169,7 +184,7 @@ def run_checks() -> list[Check]:
 def critical_problems() -> list[Check]:
     """Problemas que impiden usar la app. Solo comprobaciones rápidas (no abre PDFs): se usa en la pantalla de inicio."""
     out: list[Check] = []
-    for fn in (check_llm, check_stt, check_storage_and_db, check_access):
+    for fn in (check_secrets, check_llm, check_stt, check_storage_and_db, check_access):
         try:
             out += [c for c in fn() if c.status == FAIL]
         except Exception:  # noqa: BLE001

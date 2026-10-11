@@ -9,7 +9,7 @@ import os
 
 import streamlit as st
 
-from .config import load_app_config, secret
+from .config import SECRETS_STATUS, load_app_config, on_streamlit_cloud, secret
 
 
 def allowed_emails() -> set[str]:
@@ -48,7 +48,9 @@ def current_user() -> dict | None:
 
 
 def check_access() -> tuple[str, dict | None]:
-    """Estado de acceso: 'open' (sin login), 'login' (hay que entrar), 'denied', 'misconfigured' u 'ok'."""
+    """Estado de acceso: 'open' (sin login), 'login' (hay que entrar), 'denied', 'misconfigured', 'wrong_mode' u 'ok'."""
+    if on_streamlit_cloud() and not load_app_config().is_cloud:
+        return "wrong_mode", None          # desplegada en Streamlit Cloud sin sus secrets: no mostrar NADA
     if not auth_required():
         return "open", None
     allowed = allowed_emails()
@@ -71,7 +73,9 @@ def guard() -> dict | None:
                 st.caption(f"👤 {user['email']}")
                 st.button("Cerrar sesión", on_click=_logout, key="auth_logout")
         return user
-    if state == "misconfigured":
+    if state == "wrong_mode":
+        _wrong_mode_message()
+    elif state == "misconfigured":
         st.error("Falta configurar `ALLOWED_EMAILS` en los secrets: por seguridad, nadie puede entrar hasta que lo hagas.")
     elif state == "login":
         st.title("📘 IELTS Trainer")
@@ -81,3 +85,18 @@ def guard() -> dict | None:
         st.error(f"La cuenta **{user['email']}** no tiene acceso a esta aplicación.")
         st.button("Cerrar sesión", on_click=_logout, key="auth_logout_denied")
     st.stop()
+
+
+def _wrong_mode_message() -> None:
+    """La app está en Streamlit Cloud pero sin IELTS_MODE=cloud: casi seguro los Secrets no se aplicaron."""
+    st.error("🔒 **La aplicación está bloqueada por seguridad.** Está desplegada en Streamlit Cloud pero no ha recibido "
+             "su configuración privada (`IELTS_MODE = \"cloud\"`), así que no mostrará nada hasta que la tenga.")
+    state = SECRETS_STATUS.get("state")
+    detail = {"missing": "Streamlit **no tiene ningún secret** guardado para esta app.",
+              "invalid": f"Los secrets existen pero **no se pueden leer** ({SECRETS_STATUS.get('error')}): suele ser TOML mal formado.",
+              "loaded": f"Se leyeron {SECRETS_STATUS.get('keys')} secrets, pero falta `IELTS_MODE = \"cloud\"`."}.get(state, "")
+    st.markdown(detail + "\n\n**Qué hacer:** en share.streamlit.io → tu app → ⋮ → *Settings* → *Secrets*, pega el contenido "
+                "completo de `.streamlit/secrets.cloud.toml`, pulsa *Save* y luego *Reboot app*.")
+    names = ["IELTS_MODE", "OPENAI_API_KEY", "ALLOWED_EMAILS", "GCS_BUCKET"]
+    defined = {n: bool(secret(n)) for n in names}
+    st.caption("Variables detectadas (solo si existen): " + ", ".join(f"{n} {'✅' if v else '❌'}" for n, v in defined.items()))

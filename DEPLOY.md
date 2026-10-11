@@ -122,6 +122,7 @@ el login de Google funcionará con la URI `http://localhost:8501/oauth2callback`
 ## Si algo falla
 | Síntoma | Causa probable |
 |---|---|
+| «La aplicación está bloqueada por seguridad» | La app está en Streamlit Cloud pero **no recibió los Secrets** (o son TOML inválido). En share.streamlit.io → ⋮ → Settings → Secrets pega `.streamlit/secrets.cloud.toml`, **Save** y **Reboot app**. El aviso te dice si no hay secrets, si no se pueden leer o si falta `IELTS_MODE`. |
 | «Falta configurar `ALLOWED_EMAILS`» | No está en los Secrets (la app falla cerrada a propósito). |
 | Google dice `redirect_uri_mismatch` | El `redirect_uri` de los Secrets no coincide exactamente con el del paso 5. |
 | «La cuenta … no tiene acceso» | Tu correo no está en `ALLOWED_EMAILS` o no está verificado. |

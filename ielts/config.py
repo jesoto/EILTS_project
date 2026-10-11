@@ -29,21 +29,37 @@ def load_env_file(path: Path | None = None) -> None:
             os.environ.setdefault(key, value)
 
 
+SECRETS_STATUS: dict = {"state": "unknown", "error": None, "keys": 0}   # unknown | loaded | missing | invalid
+
+
 def bridge_streamlit_secrets() -> None:
-    """Copia los *secrets* planos de Streamlit (texto) a os.environ, sin pisar variables ya definidas."""
+    """Copia los *secrets* planos de Streamlit (texto) a os.environ, sin pisar variables ya definidas.
+
+    Anota en SECRETS_STATUS si había secrets, si no había o si estaban mal (solo el tipo de error, nunca su contenido).
+    """
     try:
         import streamlit as st
-        secrets = st.secrets
-        keys = list(secrets.keys())
-    except Exception:  # noqa: BLE001 — sin secrets.toml o fuera de Streamlit
+        keys = list(st.secrets.keys())
+    except Exception as e:  # noqa: BLE001 — sin secrets.toml, TOML inválido o fuera de Streamlit
+        name = type(e).__name__
+        SECRETS_STATUS.update(state="missing" if "NotFound" in name or isinstance(e, FileNotFoundError) else "invalid",
+                              error=name, keys=0)
         return
+    SECRETS_STATUS.update(state="loaded", error=None, keys=len(keys))
     for k in keys:
         try:
-            v = secrets[k]
+            v = st.secrets[k]
         except Exception:  # noqa: BLE001
             continue
         if isinstance(v, str):
             os.environ.setdefault(k, v)
+
+
+def on_streamlit_cloud() -> bool:
+    """True si la app corre en Streamlit Community Cloud (el código vive en /mount/src). IELTS_ON_CLOUD=1 lo fuerza (tests)."""
+    if os.environ.get("IELTS_ON_CLOUD") == "1":
+        return True
+    return str(ROOT).replace("\\", "/").startswith("/mount/src")
 
 
 def load_env() -> None:
