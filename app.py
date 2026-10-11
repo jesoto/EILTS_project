@@ -1,7 +1,7 @@
 """Inicio: semana actual, fase, cuenta atrás y los 7 botones de práctica."""
 import streamlit as st
 
-from ielts import audit, db, progress
+from ielts import audit, db, doctor, progress
 from ielts.config import load_llm_config
 from ielts.calendar import Mode, day_info, days_to_exam, effective_week
 from ielts.curriculum import WEEKDAYS, load_curriculum
@@ -20,6 +20,11 @@ wk = cur.week(week)
 st.title("📘 IELTS Trainer")
 _llm = load_llm_config()
 st.caption(f"Modelo de lenguaje: {_llm.provider} · {_llm.active_model}")
+_problems = doctor.critical_problems()
+if _problems:
+    _lines = [f"- {c.title}" + (f" → {c.fix}" if c.fix else "") for c in _problems]
+    st.error("**Falta configurar algo para que la app funcione:**\n\n" + "\n".join(_lines))
+    st.page_link("pages/6_Configuracion.py", label="Abrir el diagnóstico de configuración →")
 c1, c2, c3, c4 = st.columns(4)
 if info.mode is Mode.DIAGNOSTIC:
     c1.metric("Semana", "Diagnóstico", help=f"El plan empieza el {cur.start_date:%d/%m/%Y}")

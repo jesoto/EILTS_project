@@ -1,4 +1,6 @@
-resources/
+# Los libros y audios no se versionan; solo se conserva resources/README.md (instrucciones).
+resources/*
+!resources/README.md
 data/derived/
 data/recordings/
 data/*.db

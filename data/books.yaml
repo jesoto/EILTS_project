@@ -1,0 +1,23 @@
+# Libros que la ingesta sabe leer. Se buscan DENTRO de resources/ (en cualquier subcarpeta), así que no importa
+# cómo se llamen tus carpetas. Cada persona pone sus propios libros: ver resources/README.md.
+#
+#   id            identificador corto (carpeta de data/derived/)
+#   title         nombre que se muestra
+#   pdf           patrones (sin distinguir mayúsculas) del nombre del PDF; vale el primero que exista
+#   audio_pattern expresión regular del nombre de cada mp3 SIN extensión; grupo 1 = número de test, grupo 2 = parte
+#                 Los mp3 se buscan en la carpeta del PDF (y sus subcarpetas).
+#   parser        "cambridge" = formato Cambridge IELTS Academic con texto seleccionable (probado con el 17)
+books:
+  - id: c17
+    title: Cambridge IELTS 17 Academic
+    parser: cambridge
+    pdf: ["cambridge_ielts_17_academic.pdf", "*ielts*17*academic*.pdf"]
+    audio_pattern: '^T(\d) AUDIO (\d)$'
+
+# Ejemplos para añadir otros libros con el mismo formato (Cambridge 18, 19…). Descomenta y ajusta; si el PDF está
+# escaneado (sin texto seleccionable) la ingesta lo avisará y necesitará OCR.
+#  - id: c18
+#    title: Cambridge IELTS 18 Academic
+#    parser: cambridge
+#    pdf: ["*ielts*18*academic*.pdf"]
+#    audio_pattern: '^Test (\d) Part (\d)$'
